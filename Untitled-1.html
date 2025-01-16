@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة عقار</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- تضمين مكتبة Google Maps -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap&v=weekly" async></script>
+</head>
+<body>
+    <h1>إضافة عقار</h1>
+    <form id="propertyForm" enctype="multipart/form-data">
+        <label for="title">عنوان العقار:</label>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="description">الوصف:</label>
+        <textarea id="description" name="description" required></textarea><br><br>
+
+        <label for="price">السعر:</label>
+        <input type="number" id="price" name="price" required><br><br>
+
+        <label for="location">الموقع:</label>
+        <input type="text" id="location" name="location" readonly><br><br>
+
+        <label for="property_type">نوع العقار:</label>
+        <select id="property_type" name="property_type" required>
+            <option value="أرض">أرض</option>
+            <option value="شقة">شقة</option>
+            <option value="عمارة">عمارة</option>
+            <option value="فيلا">فيلا</option>
+        </select><br><br>
+
+        <label for="attachments">المرفقات:</label>
+        <input type="file" name="attachments" multiple><br><br>
+
+        <button type="submit">إضافة العقار</button>
+    </form>
+
+    <h2>تعيين الموقع على الخريطة</h2>
+    <div id="map" style="height: 400px; width: 100%;"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
