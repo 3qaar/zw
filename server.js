@@ -1,20 +1,25 @@
-app.post('/add-property', upload.array('attachments', 5), (req, res) => {
-    const { title, description, price, location, property_type, lat, lng } = req.body;
-    const query = 'INSERT INTO properties (title, description, price, location, property_type, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    db.query(query, [title, description, price, location, property_type, lat, lng], (err, result) => {
-        if (err) throw err;
-        const propertyId = result.insertId;
+function fetchProperties() {
+    fetch('http://localhost:3000/properties')
+        .then(response => response.json())
+        .then(properties => {
+            const propertyList = document.getElementById('propertyList');
+            propertyList.innerHTML = '';
 
-        // إضافة المرفقات
-        if (req.files) {
-            req.files.forEach(file => {
-                const attachmentQuery = 'INSERT INTO attachments (property_id, file_path, file_type) VALUES (?, ?, ?)';
-                db.query(attachmentQuery, [propertyId, file.path, file.mimetype], (err, result) => {
-                    if (err) throw err;
-                });
+            properties.forEach(property => {
+                const propertyDiv = document.createElement('div');
+                const attachments = property.attachments.map(
+                    attachment => `<img src="http://localhost:3000/${attachment.file_path}" alt="Attachment" style="width:100%; border-radius: 5px; margin-bottom: 10px;">`
+                ).join('');
+
+                propertyDiv.innerHTML = `
+                    ${attachments}
+                    <h2>${property.title}</h2>
+                    <p>${property.description}</p>
+                    <p><strong>السعر:</strong> ${property.price} جنيه</p>
+                    <p><strong>الموقع:</strong> ${property.location}</p>
+                    <p><strong>نوع العقار:</strong> ${property.property_type}</p>
+                `;
+                propertyList.appendChild(propertyDiv);
             });
-        }
-
-        res.send('Property added successfully!');
-    });
-});
+        });
+}
