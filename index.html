@@ -62,13 +62,24 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        .admin-login {
+            text-align: center;
+            margin-top: 2rem;
+        }
     </style>
 </head>
 <body>
     <header>
         <h1>قائمة العقارات</h1>
     </header>
-    <div class="container">
+
+    <div id="adminLoginSection" class="admin-login">
+        <h2>تسجيل الدخول كمسؤول</h2>
+        <input type="password" id="adminPassword" placeholder="أدخل كلمة السر" />
+        <button onclick="loginAsAdmin()">دخول</button>
+    </div>
+
+    <div class="container" id="propertyContainer" style="display: none;">
         <h2>إضافة عقار جديد</h2>
         <div class="property-upload" id="adminSection">
             <input type="text" id="propertyName" placeholder="اسم العقار" required>
@@ -87,16 +98,28 @@
     <script>
         const propertyList = document.getElementById('propertyList');
         const adminSection = document.getElementById('adminSection');
-        let isAdmin = confirm("هل أنت مسؤول؟");
-
-        if (!isAdmin) {
-            adminSection.style.display = 'none';
-        }
+        const propertyContainer = document.getElementById('propertyContainer');
+        const adminLoginSection = document.getElementById('adminLoginSection');
+        
+        const adminPassword = 'admin123';  // كلمة السر للمسؤول (يمكنك تغييرها حسب رغبتك)
+        let isAdmin = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
             storedProperties.forEach(property => addPropertyToList(property));
         });
+
+        function loginAsAdmin() {
+            const passwordInput = document.getElementById('adminPassword').value;
+
+            if (passwordInput === adminPassword) {
+                isAdmin = true;
+                adminLoginSection.style.display = 'none';  // إخفاء قسم الدخول
+                propertyContainer.style.display = 'block'; // إظهار قائمة العقارات مع واجهة المسؤول
+            } else {
+                alert('كلمة السر غير صحيحة');
+            }
+        }
 
         function addProperty() {
             const name = document.getElementById('propertyName').value;
