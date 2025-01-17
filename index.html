@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة العقارات</title>
+    <title>عرض العقارات</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -58,7 +58,7 @@
 </head>
 <body>
     <header>
-        <h1>إدارة العقارات</h1>
+        <h1>قائمة العقارات</h1>
     </header>
     <div class="container">
         <h2>إضافة عقار جديد</h2>
@@ -80,7 +80,7 @@
         const propertyList = document.getElementById('propertyList');
         const adminSection = document.getElementById('adminSection');
 
-        // تحقق إذا كان المستخدم مسؤولاً
+        // تحقق من ما إذا كان المستخدم مسؤولاً
         const isAdmin = confirm("هل أنت مسؤول؟");
         if (!isAdmin) {
             adminSection.style.display = 'none';
@@ -92,11 +92,6 @@
         });
 
         function addProperty() {
-            if (!isAdmin) {
-                alert("ليس لديك صلاحية لإضافة العقارات.");
-                return;
-            }
-
             const name = document.getElementById('propertyName').value;
             const location = document.getElementById('propertyLocation').value;
             const price = document.getElementById('propertyPrice').value;
@@ -139,13 +134,16 @@
             const propertyItem = document.createElement('div');
             propertyItem.className = 'property-item';
 
-            const imagesHtml = property.images.map(img => `<img src="${img}" alt="${property.name}">`).join('');
+            const imagesHtml = property.images.map(img => `<img src="${img}" alt="${property.name}" style="display: none;">`).join('');
             
-            const buttonsHtml = isAdmin
+            const buttonsHtml = `
+                <button onclick="viewAttachments('${property.name}')">عرض المرفقات</button>
+            `;
+            
+            const adminButtons = isAdmin
                 ? `
-                    <button onclick="editProperty('${property.name}')">تعديل</button>
-                    <button onclick="deleteProperty('${property.name}')">حذف</button>
-                    <button onclick="editAttachments('${property.name}')">تعديل المرفقات</button>
+                <button onclick="editProperty('${property.name}')">تعديل</button>
+                <button onclick="deleteProperty('${property.name}')">حذف</button>
                 `
                 : '';
 
@@ -156,36 +154,99 @@
                 <p>${property.description}</p>
                 ${imagesHtml}
                 ${buttonsHtml}
+                ${adminButtons}
             `;
             propertyList.appendChild(propertyItem);
         }
 
-        function editProperty(name) {
-            if (!isAdmin) {
-                alert("ليس لديك صلاحية لتعديل العقارات.");
+        function viewAttachments(propertyName) {
+            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
+            const property = storedProperties.find(p => p.name === propertyName);
+
+            if (!property) {
+                alert('العقار غير موجود.');
                 return;
             }
-            alert(`تم فتح نافذة تعديل للعقار: ${name}`);
+
+            const newWindow = window.open('', '_blank');
+            const html = `
+                <html lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>مرفقات ${property.name}</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #f4f4f9;
+                            color: #333;
+                            text-align: center;
+                        }
+                        img {
+                            max-width: 90%;
+                            margin: 10px 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>مرفقات ${property.name}</h1>
+                    ${property.images.map(img => `<img src="${img}" alt="${property.name}">`).join('')}
+                </body>
+                </html>
+            `;
+            newWindow.document.write(html);
+            newWindow.document.close();
         }
 
-        function deleteProperty(name) {
+        function editProperty(propertyName) {
             if (!isAdmin) {
-                alert("ليس لديك صلاحية لحذف العقارات.");
+                alert('غير مصرح لك بتعديل هذا العقار.');
                 return;
             }
 
             const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const filteredProperties = storedProperties.filter(property => property.name !== name);
-            localStorage.setItem('properties', JSON.stringify(filteredProperties));
-            location.reload();
-        }
+            const propertyIndex = storedProperties.findIndex(p => p.name === propertyName);
 
-        function editAttachments(name) {
-            if (!isAdmin) {
-                alert("ليس لديك صلاحية لتعديل المرفقات.");
+            if (propertyIndex === -1) {
+                alert('العقار غير موجود.');
                 return;
             }
-            alert(`تم فتح نافذة تعديل مرفقات للعقار: ${name}`);
+
+            const property = storedProperties[propertyIndex];
+            const newName = prompt('اسم العقار:', property.name);
+            const newLocation = prompt('الموقع:', property.location);
+            const newPrice = prompt('السعر (بالريال):', property.price);
+            const newDescription = prompt('وصف العقار:', property.description);
+
+            if (newName && newLocation && newPrice && newDescription) {
+                property.name = newName;
+                property.location = newLocation;
+                property.price = newPrice;
+                property.description = newDescription;
+
+                storedProperties[propertyIndex] = property;
+                localStorage.setItem('properties', JSON.stringify(storedProperties));
+
+                propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
+                storedProperties.forEach(addPropertyToList);
+            }
+        }
+
+        function deleteProperty(propertyName) {
+            if (!isAdmin) {
+                alert('غير مصرح لك بحذف هذا العقار.');
+                return;
+            }
+
+            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
+            const filteredProperties = storedProperties.filter(p => p.name !== propertyName);
+
+            localStorage.setItem('properties', JSON.stringify(filteredProperties));
+
+            propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
+            filteredProperties.forEach(addPropertyToList);
         }
     </script>
 </body>
