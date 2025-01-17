@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Storage System</title>
+    <title>Real Estate Listings</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -29,29 +29,17 @@
         h1 {
             text-align: center;
         }
-        .file-upload {
+        .property-upload {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .file-upload input[type="file"], .file-upload input[type="text"] {
+        .property-upload input, .property-upload textarea {
             margin: 1rem 0;
             padding: 0.5rem;
+            width: 100%;
         }
-        .file-list {
-            margin-top: 2rem;
-        }
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem;
-            border-bottom: 1px solid #ddd;
-        }
-        .file-item .view-only {
-            cursor: default;
-            color: #000;
-        }
-        .file-item button {
+        .property-upload button {
             background-color: #6200ea;
             color: white;
             border: none;
@@ -59,300 +47,112 @@
             cursor: pointer;
             border-radius: 4px;
         }
-        .file-item button:hover {
+        .property-upload button:hover {
             background-color: #3700b3;
         }
-        #fileViewer {
-            margin-top: 20px;
+        .property-list {
+            margin-top: 2rem;
+        }
+        .property-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1rem;
             padding: 1rem;
-            background: #f9f9f9;
-            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .property-item h3 {
+            margin: 0 0 0.5rem;
+        }
+        .property-item p {
+            margin: 0.5rem 0;
+        }
+        .property-item img {
+            max-width: 100%;
             border-radius: 4px;
-        }
-        #pdfViewer {
-            width: 100%;
-            height: 500px;
-        }
-        .note-container {
-            display: flex;
-            align-items: flex-start;
-            margin-top: 20px;
-        }
-        .note-container img {
-            max-width: 150px;
-            margin-right: 20px;
-        }
-        .note-container .note-text {
-            flex-grow: 1;
-            background-color: #f1f1f1;
-            padding: 1rem;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        .note-container .note-text textarea {
-            width: 100%;
-            height: 100px;
-            padding: 0.5rem;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        .note-container .note-text input {
-            width: 100%;
-            padding: 0.5rem;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            margin-bottom: 10px;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
 </head>
 <body>
     <header>
-        <h1>File Storage System</h1>
+        <h1>Real Estate Listings</h1>
     </header>
     <div class="container">
-        <h2>Upload a File</h2>
-        <div class="file-upload" id="adminSection">
-            <input type="text" id="fileTitle" placeholder="Enter file title" required>
-            <input type="file" id="fileInput">
-            <button onclick="uploadFile()">Upload</button>
+        <h2>Add a New Property</h2>
+        <div class="property-upload">
+            <input type="text" id="propertyName" placeholder="Property Name" required>
+            <input type="text" id="propertyLocation" placeholder="Location" required>
+            <input type="number" id="propertyPrice" placeholder="Price (in USD)" required>
+            <textarea id="propertyDescription" placeholder="Property Description" rows="4"></textarea>
+            <input type="file" id="propertyImage" accept="image/*">
+            <button onclick="addProperty()">Add Property</button>
         </div>
 
-        <div class="file-list" id="fileList">
-            <h2>Stored Files</h2>
+        <div class="property-list" id="propertyList">
+            <h2>Available Properties</h2>
         </div>
-
-        <!-- Viewer for files -->
-        <div id="fileViewer"></div>
     </div>
 
     <script>
-        const fileList = document.getElementById('fileList');
-        const fileViewer = document.getElementById('fileViewer');
-        const adminSection = document.getElementById('adminSection');
+        const propertyList = document.getElementById('propertyList');
 
-        // Simulating admin user (true for admin, false for normal users)
-        const isAdmin = confirm("Are you an admin?");
-        if (!isAdmin) {
-            adminSection.style.display = 'none';
-        }
-
-        // Load stored files from localStorage on page load
+        // Load stored properties from localStorage on page load
         document.addEventListener('DOMContentLoaded', () => {
-            const storedFiles = JSON.parse(localStorage.getItem('files')) || [];
-            storedFiles.forEach(fileName => {
-                addFileToList(fileName);
+            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
+            storedProperties.forEach(property => {
+                addPropertyToList(property);
             });
         });
 
-        function uploadFile() {
-            const fileInput = document.getElementById('fileInput');
-            const fileTitle = document.getElementById('fileTitle').value;
-            const file = fileInput.files[0];
+        function addProperty() {
+            const name = document.getElementById('propertyName').value;
+            const location = document.getElementById('propertyLocation').value;
+            const price = document.getElementById('propertyPrice').value;
+            const description = document.getElementById('propertyDescription').value;
+            const imageInput = document.getElementById('propertyImage');
+            const image = imageInput.files[0];
 
-            if (!file) {
-                alert('Please select a file to upload.');
-                return;
-            }
-
-            if (!fileTitle) {
-                alert('Please provide a title for the file.');
+            if (!name || !location || !price || !description || !image) {
+                alert('Please fill in all fields and select an image.');
                 return;
             }
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const fileContent = e.target.result;
+                const imageData = e.target.result;
 
-                // Save file name, title, and content to localStorage
-                const storedFiles = JSON.parse(localStorage.getItem('files')) || [];
-                const storedContents = JSON.parse(localStorage.getItem('fileContents')) || {};
-                const storedNotes = JSON.parse(localStorage.getItem('fileNotes')) || {};
-                const storedTitles = JSON.parse(localStorage.getItem('fileTitles')) || {};
-                storedFiles.push(file.name);
-                storedContents[file.name] = fileContent;
-                storedNotes[file.name] = ""; // Initialize an empty note for the file
-                storedTitles[file.name] = fileTitle;
-                localStorage.setItem('files', JSON.stringify(storedFiles));
-                localStorage.setItem('fileContents', JSON.stringify(storedContents));
-                localStorage.setItem('fileNotes', JSON.stringify(storedNotes));
-                localStorage.setItem('fileTitles', JSON.stringify(storedTitles));
+                // Save property data to localStorage
+                const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
+                const property = { name, location, price, description, image: imageData };
+                storedProperties.push(property);
+                localStorage.setItem('properties', JSON.stringify(storedProperties));
 
-                // Add file to the UI list
-                addFileToList(file.name);
-                fileInput.value = '';
-                document.getElementById('fileTitle').value = '';  // Clear title input
+                // Add property to the UI list
+                addPropertyToList(property);
+
+                // Clear inputs
+                document.getElementById('propertyName').value = '';
+                document.getElementById('propertyLocation').value = '';
+                document.getElementById('propertyPrice').value = '';
+                document.getElementById('propertyDescription').value = '';
+                imageInput.value = '';
             };
 
-            // Handle different file types
-            if (file.type === 'application/pdf') {
-                reader.readAsArrayBuffer(file);  // Read as ArrayBuffer for PDFs
-            } else if (file.type.startsWith('image/')) {
-                reader.readAsDataURL(file);  // Read image files as Data URL
-            } else if (file.type.startsWith('text/')) {
-                reader.readAsText(file);  // Read text files as Text
-            } else {
-                alert('Unsupported file type.');
-            }
+            reader.readAsDataURL(image);
         }
 
-        function addFileToList(fileName) {
-            const fileItem = document.createElement('div');
-            fileItem.className = 'file-item';
+        function addPropertyToList(property) {
+            const propertyItem = document.createElement('div');
+            propertyItem.className = 'property-item';
 
-            const storedTitles = JSON.parse(localStorage.getItem('fileTitles')) || {};
-            const title = storedTitles[fileName] || 'Untitled';
-
-            let adminButtons = '';
-            if (isAdmin) {
-                adminButtons = `
-                    <button onclick="editFile('${fileName}')">Edit</button>
-                    <button onclick="deleteFile('${fileName}')">Delete</button>
-                `;
-            }
-
-            fileItem.innerHTML = `
-                <span class="view-only">${title}</span>
-                <button onclick="viewFile('${fileName}')">View</button>
-                <button onclick="downloadFile('${fileName}')">Download</button>
-                ${adminButtons}
+            propertyItem.innerHTML = `
+                <img src="${property.image}" alt="${property.name}">
+                <h3>${property.name}</h3>
+                <p><strong>Location:</strong> ${property.location}</p>
+                <p><strong>Price:</strong> $${property.price}</p>
+                <p>${property.description}</p>
             `;
 
-            fileList.appendChild(fileItem);
-        }
-
-        function editFile(fileName) {
-            const storedTitles = JSON.parse(localStorage.getItem('fileTitles')) || {};
-            const storedNotes = JSON.parse(localStorage.getItem('fileNotes')) || {};
-
-            const currentTitle = storedTitles[fileName];
-            const currentNote = storedNotes[fileName];
-
-            const newTitle = prompt("Edit title:", currentTitle);
-            if (newTitle !== null) {
-                storedTitles[fileName] = newTitle;
-                localStorage.setItem('fileTitles', JSON.stringify(storedTitles));
-                alert('Title updated!');
-                document.location.reload();  // Reload page to reflect changes
-            }
-
-            const newNote = prompt("Edit note:", currentNote);
-            if (newNote !== null) {
-                storedNotes[fileName] = newNote;
-                localStorage.setItem('fileNotes', JSON.stringify(storedNotes));
-                alert('Note updated!');
-                document.location.reload();  // Reload page to reflect changes
-            }
-        }
-
-        function viewFile(fileName) {
-            const storedContents = JSON.parse(localStorage.getItem('fileContents')) || {};
-            const storedNotes = JSON.parse(localStorage.getItem('fileNotes')) || {};
-            const storedTitles = JSON.parse(localStorage.getItem('fileTitles')) || {};
-            const fileContent = storedContents[fileName];
-            const noteContent = storedNotes[fileName];
-            const title = storedTitles[fileName];
-
-            if (!fileContent) {
-                alert('File content not found.');
-                return;
-            }
-
-            const fileType = fileName.split('.').pop().toLowerCase();
-
-            // Clear previous content in the viewer
-            fileViewer.innerHTML = '';
-
-            // Display title
-            const fileTitleDisplay = document.createElement('h3');
-            fileTitleDisplay.textContent = title;
-            fileViewer.appendChild(fileTitleDisplay);
-
-            if (fileType === 'pdf') {
-                viewPDF(fileContent);
-            } else if (fileType === 'txt' || fileType === 'html' || fileType === 'csv') {
-                viewText(fileContent);
-            } else if (fileType === 'jpg' || fileType === 'png' || fileType === 'gif' || fileType === 'jpeg') {
-                viewImage(fileContent);
-            } else {
-                alert('Unsupported file type for viewing.');
-            }
-
-            // Add note section
-            const noteContainer = document.createElement('div');
-            noteContainer.className = 'note-container';
-
-            // Display image if it's an image file
-            if (fileType === 'jpg' || fileType === 'png' || fileType === 'jpeg' || fileType === 'gif') {
-                const img = document.createElement('img');
-                img.src = fileContent;
-                noteContainer.appendChild(img);
-            }
-
-            const noteText = document.createElement('div');
-            noteText.className = 'note-text';
-            noteText.innerHTML = `
-                <textarea placeholder="Add your note here..." onclick="this.select()">${noteContent}</textarea>
-            `;
-            noteContainer.appendChild(noteText);
-            fileViewer.appendChild(noteContainer);
-        }
-
-        function viewPDF(fileContent) {
-            const pdfContainer = document.createElement('div');
-            pdfContainer.id = 'pdfViewer';
-            fileViewer.appendChild(pdfContainer);
-
-            pdfjsLib.getDocument(fileContent).promise.then(function(pdf) {
-                pdf.getPage(1).then(function(page) {
-                    const scale = 1.5;
-                    const viewport = page.getViewport({ scale: scale });
-
-                    const canvas = document.createElement('canvas');
-                    pdfContainer.appendChild(canvas);
-
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-
-                    page.render({ canvasContext: context, viewport: viewport });
-                });
-            });
-        }
-
-        function viewText(fileContent) {
-            const textContent = document.createElement('pre');
-            textContent.textContent = fileContent;
-            fileViewer.appendChild(textContent);
-        }
-
-        function viewImage(fileContent) {
-            const img = document.createElement('img');
-            img.src = fileContent;
-            fileViewer.appendChild(img);
-        }
-
-        function deleteFile(fileName) {
-            const storedFiles = JSON.parse(localStorage.getItem('files')) || [];
-            const storedContents = JSON.parse(localStorage.getItem('fileContents')) || {};
-            const storedNotes = JSON.parse(localStorage.getItem('fileNotes')) || {};
-            const storedTitles = JSON.parse(localStorage.getItem('fileTitles')) || {};
-
-            const fileIndex = storedFiles.indexOf(fileName);
-            if (fileIndex !== -1) {
-                storedFiles.splice(fileIndex, 1);
-                delete storedContents[fileName];
-                delete storedNotes[fileName];
-                delete storedTitles[fileName];
-
-                localStorage.setItem('files', JSON.stringify(storedFiles));
-                localStorage.setItem('fileContents', JSON.stringify(storedContents));
-                localStorage.setItem('fileNotes', JSON.stringify(storedNotes));
-                localStorage.setItem('fileTitles', JSON.stringify(storedTitles));
-
-                alert('File deleted successfully!');
-                document.location.reload();
-            }
+            propertyList.appendChild(propertyItem);
         }
     </script>
 </body>
