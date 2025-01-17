@@ -184,6 +184,7 @@
                 ? `
                 <button onclick="editProperty('${property.name}')">تعديل</button>
                 <button onclick="deleteProperty('${property.name}')">حذف</button>
+                <button onclick="addAttachment('${property.name}')">إضافة مرفق</button>
                 `
                 : '';
 
@@ -293,6 +294,30 @@
 
             propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
             filteredProperties.forEach(addPropertyToList);
+        }
+
+        function addAttachment(propertyName) {
+            if (!isAdmin) {
+                alert('غير مصرح لك بإضافة مرفق.');
+                return;
+            }
+
+            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
+            const property = storedProperties.find(p => p.name === propertyName);
+
+            if (!property) {
+                alert('العقار غير موجود.');
+                return;
+            }
+
+            const newImage = prompt('أدخل رابط الصورة الجديدة:');
+            if (newImage) {
+                property.images.push(newImage);
+                localStorage.setItem('properties', JSON.stringify(storedProperties));
+
+                propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
+                storedProperties.forEach(addPropertyToList);
+            }
         }
     </script>
 </body>
