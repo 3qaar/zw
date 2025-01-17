@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real Estate Listings</title>
+    <title>عرض العقارات</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,6 +11,7 @@
             padding: 0;
             background-color: #f4f4f9;
             color: #333;
+            direction: rtl;
         }
         header {
             background-color: #6200ea;
@@ -70,32 +71,54 @@
             max-width: 100%;
             border-radius: 4px;
         }
+        .property-item button {
+            margin-top: 10px;
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .property-item button:hover {
+            background-color: #3700b3;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>Real Estate Listings</h1>
+        <h1>قائمة العقارات</h1>
     </header>
     <div class="container">
-        <h2>Add a New Property</h2>
-        <div class="property-upload">
-            <input type="text" id="propertyName" placeholder="Property Name" required>
-            <input type="text" id="propertyLocation" placeholder="Location" required>
-            <input type="number" id="propertyPrice" placeholder="Price (in USD)" required>
-            <textarea id="propertyDescription" placeholder="Property Description" rows="4"></textarea>
+        <h2>إضافة عقار جديد</h2>
+        <div class="property-upload" id="adminSection">
+            <input type="text" id="propertyName" placeholder="اسم العقار" required>
+            <input type="text" id="propertyLocation" placeholder="الموقع" required>
+            <input type="number" id="propertyPrice" placeholder="السعر (بالريال السعودي)" required>
+            <textarea id="propertyDescription" placeholder="وصف العقار" rows="4"></textarea>
             <input type="file" id="propertyImage" accept="image/*">
-            <button onclick="addProperty()">Add Property</button>
+            <button onclick="addProperty()">إضافة العقار</button>
         </div>
 
         <div class="property-list" id="propertyList">
-            <h2>Available Properties</h2>
+            <h2>العقارات المتوفرة</h2>
         </div>
     </div>
 
     <script>
         const propertyList = document.getElementById('propertyList');
+        const adminSection = document.getElementById('adminSection');
 
-        // Load stored properties from localStorage on page load
+        // تحقق من ما إذا كان المستخدم مسؤولاً
+        const isAdmin = confirm("هل أنت مسؤول؟");
+        if (!isAdmin) {
+            adminSection.classList.add('hidden'); // إخفاء قسم إضافة العقارات للمستخدمين العاديين
+        }
+
+        // تحميل العقارات من localStorage عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
             const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
             storedProperties.forEach(property => {
@@ -112,7 +135,7 @@
             const image = imageInput.files[0];
 
             if (!name || !location || !price || !description || !image) {
-                alert('Please fill in all fields and select an image.');
+                alert('يرجى تعبئة جميع الحقول واختيار صورة.');
                 return;
             }
 
@@ -120,16 +143,16 @@
             reader.onload = function(e) {
                 const imageData = e.target.result;
 
-                // Save property data to localStorage
+                // حفظ بيانات العقار في localStorage
                 const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
                 const property = { name, location, price, description, image: imageData };
                 storedProperties.push(property);
                 localStorage.setItem('properties', JSON.stringify(storedProperties));
 
-                // Add property to the UI list
+                // إضافة العقار إلى القائمة في الواجهة
                 addPropertyToList(property);
 
-                // Clear inputs
+                // مسح الحقول بعد الإضافة
                 document.getElementById('propertyName').value = '';
                 document.getElementById('propertyLocation').value = '';
                 document.getElementById('propertyPrice').value = '';
@@ -144,15 +167,59 @@
             const propertyItem = document.createElement('div');
             propertyItem.className = 'property-item';
 
+            let adminButtons = '';
+            if (isAdmin) {
+                adminButtons = `
+                    <button onclick="editProperty('${property.name}')">تعديل</button>
+                    <button onclick="deleteProperty('${property.name}')">حذف</button>
+                `;
+            }
+
             propertyItem.innerHTML = `
                 <img src="${property.image}" alt="${property.name}">
                 <h3>${property.name}</h3>
-                <p><strong>Location:</strong> ${property.location}</p>
-                <p><strong>Price:</strong> $${property.price}</p>
+                <p><strong>الموقع:</strong> ${property.location}</p>
+                <p><strong>السعر:</strong> ${property.price} ريال</p>
                 <p>${property.description}</p>
+                ${adminButtons}
             `;
 
             propertyList.appendChild(propertyItem);
+        }
+
+        function editProperty(propertyName) {
+            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
+            const property = storedProperties.find(p => p.name === propertyName);
+
+            if (!property) {
+                alert('العقار غير موجود.');
+                return;
+            }
+
+            const newName = prompt('تعديل اسم العقار:', property.name);
+            const newLocation = prompt('تعديل موقع العقار:', property.location);
+            const newPrice = prompt('تعديل سعر العقار:', property.price);
+            const newDescription = prompt('تعديل وصف العقار:', property.description);
+
+            if (newName && newLocation && newPrice && newDescription) {
+                property.name = newName;
+                property.location = newLocation;
+                property.price = newPrice;
+                property.description = newDescription;
+
+                localStorage.setItem('properties', JSON.stringify(storedProperties));
+                alert('تم تعديل العقار بنجاح!');
+                document.location.reload();
+            }
+        }
+
+        function deleteProperty(propertyName) {
+            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
+            const updatedProperties = storedProperties.filter(p => p.name !== propertyName);
+
+            localStorage.setItem('properties', JSON.stringify(updatedProperties));
+            alert('تم حذف العقار بنجاح!');
+            document.location.reload();
         }
     </script>
 </body>
