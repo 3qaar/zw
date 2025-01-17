@@ -54,6 +54,14 @@
             max-width: 100%;
             border-radius: 4px;
         }
+        .property-item .remove-image {
+            background-color: red;
+            color: white;
+            padding: 0.3rem 0.6rem;
+            margin-top: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -79,9 +87,8 @@
     <script>
         const propertyList = document.getElementById('propertyList');
         const adminSection = document.getElementById('adminSection');
+        let isAdmin = confirm("هل أنت مسؤول؟");
 
-        // تحقق من ما إذا كان المستخدم مسؤولاً
-        const isAdmin = confirm("هل أنت مسؤول؟");
         if (!isAdmin) {
             adminSection.style.display = 'none';
         }
@@ -134,12 +141,17 @@
             const propertyItem = document.createElement('div');
             propertyItem.className = 'property-item';
 
-            const imagesHtml = property.images.map(img => `<img src="${img}" alt="${property.name}" style="display: none;">`).join('');
-            
+            const imagesHtml = property.images.map((img, index) => `
+                <div>
+                    <img src="${img}" alt="${property.name}" style="display: block; max-width: 100%; border-radius: 4px;">
+                    ${isAdmin ? `<button class="remove-image" onclick="removeImage('${property.name}', ${index})">حذف الصورة</button>` : ''}
+                </div>
+            `).join('');
+
             const buttonsHtml = `
                 <button onclick="viewAttachments('${property.name}')">عرض المرفقات</button>
             `;
-            
+
             const adminButtons = isAdmin
                 ? `
                 <button onclick="editProperty('${property.name}')">تعديل</button>
@@ -157,6 +169,26 @@
                 ${adminButtons}
             `;
             propertyList.appendChild(propertyItem);
+        }
+
+        function removeImage(propertyName, imageIndex) {
+            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
+            const propertyIndex = storedProperties.findIndex(p => p.name === propertyName);
+
+            if (propertyIndex === -1) {
+                alert('العقار غير موجود.');
+                return;
+            }
+
+            const property = storedProperties[propertyIndex];
+            property.images.splice(imageIndex, 1);  // حذف الصورة المحددة
+
+            storedProperties[propertyIndex] = property;
+            localStorage.setItem('properties', JSON.stringify(storedProperties));
+
+            // إعادة عرض العقارات
+            propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
+            storedProperties.forEach(addPropertyToList);
         }
 
         function viewAttachments(propertyName) {
