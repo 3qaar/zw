@@ -54,14 +54,6 @@
             max-width: 100%;
             border-radius: 4px;
         }
-        .property-item .remove-image {
-            background-color: red;
-            color: white;
-            padding: 0.3rem 0.6rem;
-            margin-top: 0.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-        }
         .admin-login {
             text-align: center;
             margin-top: 2rem;
@@ -74,9 +66,10 @@
     </header>
 
     <div id="adminLoginSection" class="admin-login">
-        <h2>تسجيل الدخول كمسؤول</h2>
+        <h2>تسجيل الدخول</h2>
         <input type="password" id="adminPassword" placeholder="أدخل كلمة السر" />
-        <button onclick="loginAsAdmin()">دخول</button>
+        <button onclick="loginAsAdmin()">دخول كمسؤول</button>
+        <button onclick="loginAsVisitor()">دخول كزائر</button>
     </div>
 
     <div class="container" id="propertyContainer" style="display: none;">
@@ -103,6 +96,7 @@
         
         const adminPassword = 'admin123';  // كلمة السر للمسؤول (يمكنك تغييرها حسب رغبتك)
         let isAdmin = false;
+        let isVisitor = false;
 
         document.addEventListener('DOMContentLoaded', () => {
             const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
@@ -114,6 +108,7 @@
 
             if (passwordInput === adminPassword) {
                 isAdmin = true;
+                isVisitor = false;
                 adminLoginSection.style.display = 'none';  // إخفاء قسم الدخول
                 propertyContainer.style.display = 'block'; // إظهار قائمة العقارات مع واجهة المسؤول
             } else {
@@ -121,7 +116,20 @@
             }
         }
 
+        function loginAsVisitor() {
+            isAdmin = false;
+            isVisitor = true;
+            adminLoginSection.style.display = 'none';  // إخفاء قسم الدخول
+            propertyContainer.style.display = 'block'; // إظهار قائمة العقارات فقط
+            loadPropertiesForVisitor();
+        }
+
         function addProperty() {
+            if (!isAdmin) {
+                alert('لا يمكنك إضافة عقارات كزائر.');
+                return;
+            }
+
             const name = document.getElementById('propertyName').value;
             const location = document.getElementById('propertyLocation').value;
             const price = document.getElementById('propertyPrice').value;
@@ -164,16 +172,13 @@
             const propertyItem = document.createElement('div');
             propertyItem.className = 'property-item';
 
-            const imagesHtml = property.images.map((img, index) => `
-                <div>
-                    <img src="${img}" alt="${property.name}" style="display: block; max-width: 100%; border-radius: 4px;">
-                    ${isAdmin ? `<button class="remove-image" onclick="removeImage('${property.name}', ${index})">حذف الصورة</button>` : ''}
-                </div>
-            `).join('');
+            // عرض أول صورة فقط على الشاشة الرئيسية
+            const firstImageHtml = property.images.length > 0 ? `<img src="${property.images[0]}" alt="${property.name}" style="display: block; max-width: 100%; border-radius: 4px;">` : '';
 
-            const buttonsHtml = `
-                <button onclick="viewAttachments('${property.name}')">عرض المرفقات</button>
-            `;
+            // HTML لعرض الصور الأخرى في نافذة المرفقات
+            const buttonsHtml = isVisitor
+                ? ''
+                : `<button onclick="viewAttachments('${property.name}')">عرض المرفقات</button>`;
 
             const adminButtons = isAdmin
                 ? `
@@ -187,29 +192,15 @@
                 <p><strong>الموقع:</strong> ${property.location}</p>
                 <p><strong>السعر:</strong> ${property.price} ريال</p>
                 <p>${property.description}</p>
-                ${imagesHtml}
+                ${firstImageHtml}
                 ${buttonsHtml}
                 ${adminButtons}
             `;
             propertyList.appendChild(propertyItem);
         }
 
-        function removeImage(propertyName, imageIndex) {
+        function loadPropertiesForVisitor() {
             const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const propertyIndex = storedProperties.findIndex(p => p.name === propertyName);
-
-            if (propertyIndex === -1) {
-                alert('العقار غير موجود.');
-                return;
-            }
-
-            const property = storedProperties[propertyIndex];
-            property.images.splice(imageIndex, 1);  // حذف الصورة المحددة
-
-            storedProperties[propertyIndex] = property;
-            localStorage.setItem('properties', JSON.stringify(storedProperties));
-
-            // إعادة عرض العقارات
             propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
             storedProperties.forEach(addPropertyToList);
         }
@@ -247,7 +238,7 @@
                 </head>
                 <body>
                     <h1>مرفقات ${property.name}</h1>
-                    ${property.images.map(img => `<img src="${img}" alt="${property.name}">`).join('')}
+                    ${property.images.slice(1).map(img => `<img src="${img}" alt="${property.name}">`).join('')}
                 </body>
                 </html>
             `;
