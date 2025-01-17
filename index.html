@@ -30,19 +30,6 @@
         h1 {
             text-align: center;
         }
-        .property-upload input, .property-upload textarea {
-            margin: 1rem 0;
-            padding: 0.5rem;
-            width: 100%;
-        }
-        .property-upload button, .property-item button {
-            background-color: #6200ea;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            border-radius: 4px;
-        }
         .property-item {
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -54,9 +41,13 @@
             max-width: 100%;
             border-radius: 4px;
         }
-        .admin-login {
-            text-align: center;
-            margin-top: 2rem;
+        .property-list button {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -64,130 +55,27 @@
     <header>
         <h1>قائمة العقارات</h1>
     </header>
-
-    <div id="adminLoginSection" class="admin-login">
-        <h2>تسجيل الدخول</h2>
-        <input type="password" id="adminPassword" placeholder="أدخل كلمة السر" />
-        <button onclick="loginAsAdmin()">دخول كمسؤول</button>
-        <button onclick="loginAsVisitor()">دخول كزائر</button>
+    <div class="container" id="propertyContainer">
+        <h2>العقارات المتوفرة</h2>
+        <div class="property-list" id="propertyList"></div>
     </div>
-
-    <div class="container" id="propertyContainer" style="display: none;">
-        <h2>إضافة عقار جديد</h2>
-        <div class="property-upload" id="adminSection" style="display: none;">
-            <input type="text" id="propertyName" placeholder="اسم العقار" required>
-            <input type="text" id="propertyLocation" placeholder="الموقع" required>
-            <input type="number" id="propertyPrice" placeholder="السعر (بالريال السعودي)" required>
-            <textarea id="propertyDescription" placeholder="وصف العقار" rows="4"></textarea>
-            <input type="file" id="propertyImages" accept="image/*" multiple>
-            <button onclick="addProperty()">إضافة العقار</button>
-        </div>
-
-        <div class="property-list" id="propertyList">
-            <h2>العقارات المتوفرة</h2>
-        </div>
-    </div>
-
+    
     <script>
-        const propertyList = document.getElementById('propertyList');
-        const adminSection = document.getElementById('adminSection');
-        const propertyContainer = document.getElementById('propertyContainer');
-        const adminLoginSection = document.getElementById('adminLoginSection');
-        
-        const adminPassword = 'admin123';  // كلمة السر للمسؤول (يمكنك تغييرها حسب رغبتك)
-        let isAdmin = false;
-        let isVisitor = false;
-
         document.addEventListener('DOMContentLoaded', () => {
             const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
             storedProperties.forEach(property => addPropertyToList(property));
         });
 
-        function loginAsAdmin() {
-            const passwordInput = document.getElementById('adminPassword').value;
-
-            if (passwordInput === adminPassword) {
-                isAdmin = true;
-                isVisitor = false;
-                adminLoginSection.style.display = 'none';  // إخفاء قسم الدخول
-                propertyContainer.style.display = 'block'; // إظهار قائمة العقارات مع واجهة المسؤول
-                adminSection.style.display = 'block';  // إظهار قسم إضافة العقار للمسؤول
-            } else {
-                alert('كلمة السر غير صحيحة');
-            }
-        }
-
-        function loginAsVisitor() {
-            isAdmin = false;
-            isVisitor = true;
-            adminLoginSection.style.display = 'none';  // إخفاء قسم الدخول
-            propertyContainer.style.display = 'block'; // إظهار قائمة العقارات فقط
-            loadPropertiesForVisitor();
-        }
-
-        function addProperty() {
-            if (!isAdmin) {
-                alert('لا يمكنك إضافة عقارات كزائر.');
-                return;
-            }
-
-            const name = document.getElementById('propertyName').value;
-            const location = document.getElementById('propertyLocation').value;
-            const price = document.getElementById('propertyPrice').value;
-            const description = document.getElementById('propertyDescription').value;
-            const imageInput = document.getElementById('propertyImages');
-            const images = Array.from(imageInput.files);
-
-            if (!name || !location || !price || !description || images.length === 0) {
-                alert('يرجى تعبئة جميع الحقول واختيار صور.');
-                return;
-            }
-
-            const imagePromises = images.map(image => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(image);
-                });
-            });
-
-            Promise.all(imagePromises).then(imageDataArray => {
-                const property = { name, location, price, description, images: imageDataArray };
-
-                const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-                storedProperties.push(property);
-                localStorage.setItem('properties', JSON.stringify(storedProperties));
-
-                addPropertyToList(property);
-
-                document.getElementById('propertyName').value = '';
-                document.getElementById('propertyLocation').value = '';
-                document.getElementById('propertyPrice').value = '';
-                document.getElementById('propertyDescription').value = '';
-                imageInput.value = '';
-            });
-        }
-
         function addPropertyToList(property) {
+            const propertyList = document.getElementById('propertyList');
             const propertyItem = document.createElement('div');
             propertyItem.className = 'property-item';
 
-            // عرض أول صورة فقط على الشاشة الرئيسية
             const firstImageHtml = property.images.length > 0 ? `<img src="${property.images[0]}" alt="${property.name}" style="display: block; max-width: 100%; border-radius: 4px;">` : '';
 
-            // HTML لعرض الصور الأخرى في نافذة المرفقات
             const buttonsHtml = `
                 <button onclick="viewAttachments('${property.name}')">عرض المرفقات</button>
             `;
-
-            const adminButtons = isAdmin
-                ? `
-                <button onclick="editProperty('${property.name}')">تعديل</button>
-                <button onclick="deleteProperty('${property.name}')">حذف</button>
-                <button onclick="addAttachment('${property.name}')">إضافة مرفق</button>
-                `
-                : '';
 
             propertyItem.innerHTML = `
                 <h3>${property.name}</h3>
@@ -196,15 +84,8 @@
                 <p>${property.description}</p>
                 ${firstImageHtml}
                 ${buttonsHtml}
-                ${adminButtons}
             `;
             propertyList.appendChild(propertyItem);
-        }
-
-        function loadPropertiesForVisitor() {
-            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
-            storedProperties.forEach(addPropertyToList);
         }
 
         function viewAttachments(propertyName) {
@@ -246,79 +127,6 @@
             `;
             newWindow.document.write(html);
             newWindow.document.close();
-        }
-
-        function editProperty(propertyName) {
-            if (!isAdmin) {
-                alert('غير مصرح لك بتعديل هذا العقار.');
-                return;
-            }
-
-            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const propertyIndex = storedProperties.findIndex(p => p.name === propertyName);
-
-            if (propertyIndex === -1) {
-                alert('العقار غير موجود.');
-                return;
-            }
-
-            const property = storedProperties[propertyIndex];
-            const newName = prompt('اسم العقار:', property.name);
-            const newLocation = prompt('الموقع:', property.location);
-            const newPrice = prompt('السعر (بالريال):', property.price);
-            const newDescription = prompt('وصف العقار:', property.description);
-
-            if (newName && newLocation && newPrice && newDescription) {
-                property.name = newName;
-                property.location = newLocation;
-                property.price = newPrice;
-                property.description = newDescription;
-
-                storedProperties[propertyIndex] = property;
-                localStorage.setItem('properties', JSON.stringify(storedProperties));
-
-                propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
-                storedProperties.forEach(addPropertyToList);
-            }
-        }
-
-        function deleteProperty(propertyName) {
-            if (!isAdmin) {
-                alert('غير مصرح لك بحذف هذا العقار.');
-                return;
-            }
-
-            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const filteredProperties = storedProperties.filter(p => p.name !== propertyName);
-
-            localStorage.setItem('properties', JSON.stringify(filteredProperties));
-
-            propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
-            filteredProperties.forEach(addPropertyToList);
-        }
-
-        function addAttachment(propertyName) {
-            if (!isAdmin) {
-                alert('غير مصرح لك بإضافة مرفق.');
-                return;
-            }
-
-            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const property = storedProperties.find(p => p.name === propertyName);
-
-            if (!property) {
-                alert('العقار غير موجود.');
-                return;
-            }
-
-            const newImage = prompt('أدخل رابط الصورة الجديدة:');
-            if (newImage) {
-                property.images.push(newImage);
-                localStorage.setItem('properties', JSON.stringify(storedProperties));
-
-                propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
-                storedProperties.forEach(addPropertyToList);
-            }
         }
     </script>
 </body>
