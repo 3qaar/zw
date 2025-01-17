@@ -30,29 +30,18 @@
         h1 {
             text-align: center;
         }
-        .property-upload {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
         .property-upload input, .property-upload textarea {
             margin: 1rem 0;
             padding: 0.5rem;
             width: 100%;
         }
-        .property-upload button {
+        .property-upload button, .property-item button {
             background-color: #6200ea;
             color: white;
             border: none;
             padding: 0.5rem 1rem;
             cursor: pointer;
             border-radius: 4px;
-        }
-        .property-upload button:hover {
-            background-color: #3700b3;
-        }
-        .property-list {
-            margin-top: 2rem;
         }
         .property-item {
             border: 1px solid #ddd;
@@ -61,30 +50,9 @@
             padding: 1rem;
             background-color: #f9f9f9;
         }
-        .property-item h3 {
-            margin: 0 0 0.5rem;
-        }
-        .property-item p {
-            margin: 0.5rem 0;
-        }
         .property-item img {
             max-width: 100%;
             border-radius: 4px;
-        }
-        .property-item button {
-            margin-top: 10px;
-            background-color: #6200ea;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .property-item button:hover {
-            background-color: #3700b3;
-        }
-        .hidden {
-            display: none;
         }
     </style>
 </head>
@@ -115,15 +83,12 @@
         // تحقق من ما إذا كان المستخدم مسؤولاً
         const isAdmin = confirm("هل أنت مسؤول؟");
         if (!isAdmin) {
-            adminSection.classList.add('hidden'); // إخفاء قسم إضافة العقارات للمستخدمين العاديين
+            adminSection.style.display = 'none';
         }
 
-        // تحميل العقارات من localStorage عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
             const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            storedProperties.forEach(property => {
-                addPropertyToList(property);
-            });
+            storedProperties.forEach(property => addPropertyToList(property));
         });
 
         function addProperty() {
@@ -151,15 +116,12 @@
             Promise.all(imagePromises).then(imageDataArray => {
                 const property = { name, location, price, description, images: imageDataArray };
 
-                // حفظ بيانات العقار في localStorage
                 const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
                 storedProperties.push(property);
                 localStorage.setItem('properties', JSON.stringify(storedProperties));
 
-                // إضافة العقار إلى القائمة في الواجهة
                 addPropertyToList(property);
 
-                // مسح الحقول بعد الإضافة
                 document.getElementById('propertyName').value = '';
                 document.getElementById('propertyLocation').value = '';
                 document.getElementById('propertyPrice').value = '';
@@ -172,29 +134,32 @@
             const propertyItem = document.createElement('div');
             propertyItem.className = 'property-item';
 
-            let adminButtons = '';
-            if (isAdmin) {
-                adminButtons = `
-                    <button onclick="editProperty('${property.name}')">تعديل</button>
-                    <button onclick="deleteProperty('${property.name}')">حذف</button>
-                `;
-            }
-
-            const imagesHtml = property.images.map(img => `<img src="${img}" alt="${property.name}">`).join('');
+            const imagesHtml = property.images.map(img => `<img src="${img}" alt="${property.name}" style="display: none;">`).join('');
+            
+            const buttonsHtml = `
+                <button onclick="viewAttachments('${property.name}')">عرض المرفقات</button>
+            `;
+            
+            const adminButtons = isAdmin
+                ? `
+                <button onclick="editProperty('${property.name}')">تعديل</button>
+                <button onclick="deleteProperty('${property.name}')">حذف</button>
+                `
+                : '';
 
             propertyItem.innerHTML = `
-                ${imagesHtml}
                 <h3>${property.name}</h3>
                 <p><strong>الموقع:</strong> ${property.location}</p>
                 <p><strong>السعر:</strong> ${property.price} ريال</p>
                 <p>${property.description}</p>
+                ${imagesHtml}
+                ${buttonsHtml}
                 ${adminButtons}
             `;
-
             propertyList.appendChild(propertyItem);
         }
 
-        function editProperty(propertyName) {
+        function viewAttachments(propertyName) {
             const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
             const property = storedProperties.find(p => p.name === propertyName);
 
@@ -203,30 +168,36 @@
                 return;
             }
 
-            const newName = prompt('تعديل اسم العقار:', property.name);
-            const newLocation = prompt('تعديل موقع العقار:', property.location);
-            const newPrice = prompt('تعديل سعر العقار:', property.price);
-            const newDescription = prompt('تعديل وصف العقار:', property.description);
-
-            if (newName && newLocation && newPrice && newDescription) {
-                property.name = newName;
-                property.location = newLocation;
-                property.price = newPrice;
-                property.description = newDescription;
-
-                localStorage.setItem('properties', JSON.stringify(storedProperties));
-                alert('تم تعديل العقار بنجاح!');
-                document.location.reload();
-            }
-        }
-
-        function deleteProperty(propertyName) {
-            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const updatedProperties = storedProperties.filter(p => p.name !== propertyName);
-
-            localStorage.setItem('properties', JSON.stringify(updatedProperties));
-            alert('تم حذف العقار بنجاح!');
-            document.location.reload();
+            const newWindow = window.open('', '_blank');
+            const html = `
+                <html lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>مرفقات ${property.name}</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #f4f4f9;
+                            color: #333;
+                            text-align: center;
+                        }
+                        img {
+                            max-width: 90%;
+                            margin: 10px 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>مرفقات ${property.name}</h1>
+                    ${property.images.map(img => `<img src="${img}" alt="${property.name}">`).join('')}
+                </body>
+                </html>
+            `;
+            newWindow.document.write(html);
+            newWindow.document.close();
         }
     </script>
 </body>
