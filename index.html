@@ -99,7 +99,7 @@
             <input type="text" id="propertyLocation" placeholder="الموقع" required>
             <input type="number" id="propertyPrice" placeholder="السعر (بالريال السعودي)" required>
             <textarea id="propertyDescription" placeholder="وصف العقار" rows="4"></textarea>
-            <input type="file" id="propertyImage" accept="image/*">
+            <input type="file" id="propertyImages" accept="image/*" multiple>
             <button onclick="addProperty()">إضافة العقار</button>
         </div>
 
@@ -131,21 +131,28 @@
             const location = document.getElementById('propertyLocation').value;
             const price = document.getElementById('propertyPrice').value;
             const description = document.getElementById('propertyDescription').value;
-            const imageInput = document.getElementById('propertyImage');
-            const image = imageInput.files[0];
+            const imageInput = document.getElementById('propertyImages');
+            const images = Array.from(imageInput.files);
 
-            if (!name || !location || !price || !description || !image) {
-                alert('يرجى تعبئة جميع الحقول واختيار صورة.');
+            if (!name || !location || !price || !description || images.length === 0) {
+                alert('يرجى تعبئة جميع الحقول واختيار صور.');
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imageData = e.target.result;
+            const imagePromises = images.map(image => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(image);
+                });
+            });
+
+            Promise.all(imagePromises).then(imageDataArray => {
+                const property = { name, location, price, description, images: imageDataArray };
 
                 // حفظ بيانات العقار في localStorage
                 const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-                const property = { name, location, price, description, image: imageData };
                 storedProperties.push(property);
                 localStorage.setItem('properties', JSON.stringify(storedProperties));
 
@@ -158,9 +165,7 @@
                 document.getElementById('propertyPrice').value = '';
                 document.getElementById('propertyDescription').value = '';
                 imageInput.value = '';
-            };
-
-            reader.readAsDataURL(image);
+            });
         }
 
         function addPropertyToList(property) {
@@ -175,8 +180,10 @@
                 `;
             }
 
+            const imagesHtml = property.images.map(img => `<img src="${img}" alt="${property.name}">`).join('');
+
             propertyItem.innerHTML = `
-                <img src="${property.image}" alt="${property.name}">
+                ${imagesHtml}
                 <h3>${property.name}</h3>
                 <p><strong>الموقع:</strong> ${property.location}</p>
                 <p><strong>السعر:</strong> ${property.price} ريال</p>
