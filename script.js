@@ -1,22 +1,23 @@
-// مسار السيرفر الذي سيستقبل الطلبات
+// رابط ملف السيرفر الذي يستقبل الطلبات
 const SERVER_URL = 'server.php';
 
+// عنصر يحتوي على قائمة العرض
 const propertyList = document.getElementById('propertyList');
 
 // لتخزين اسم العقار الحالي عند إضافة مرفق
 let currentPropertyName = '';
 
-// جلب جميع العقارات وعرضها فور تحميل الصفحة
+// عند تحميل الصفحة، نجلب قائمة العقارات
 window.onload = () => {
     fetchProperties();
 };
 
-// دالة جلب العقارات من الخادم
+// جلب جميع العقارات من الخادم وعرضها
 function fetchProperties() {
     fetch(`${SERVER_URL}?action=read`)
         .then(response => response.json())
         .then(data => {
-            propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
+            propertyList.innerHTML = '<h2 class="h5">العقارات المتوفرة</h2>';
             data.forEach(addPropertyToList);
         })
         .catch(error => console.error('Error:', error));
@@ -78,49 +79,62 @@ function addProperty() {
         .catch(error => console.error('Error:', error));
 }
 
-// دالة إنشاء العناصر في واجهة العرض
+// إضافة العقار إلى واجهة العرض
 function addPropertyToList(property) {
-    const propertyItem = document.createElement('div');
-    propertyItem.className = 'property-item';
+    // إنشاء بطاقة لعرض بيانات العقار
+    const card = document.createElement('div');
+    card.className = 'card mb-3 property-card';
 
     // عرض صورة أولى في حال كانت موجودة
     let firstImageHtml = '';
     if (property.images && property.images.length > 0) {
-        firstImageHtml = `<img src="${property.images[0]}" alt="${property.name}" style="display: block; max-width: 100%; border-radius: 4px;">`;
+        firstImageHtml = `<img src="${property.images[0]}" alt="${property.name}" />`;
     }
 
-    // عرض جميع المرفقات
+    // إعداد المرفقات (جميع الصور)
     let attachmentsHtml = '';
     if (property.images && property.images.length > 0) {
         attachmentsHtml = `
-            <div class="attachments">
+            <div class="mt-3 property-attachments">
                 ${property.images.map((img, index) => `
                     <div class="attachment-item">
                         <img src="${img}" alt="مرفق ${index + 1}">
-                        <button onclick="deleteAttachment('${property.name}', ${index})">حذف</button>
+                        <button onclick="deleteAttachment('${property.name}', ${index})">&times;</button>
                     </div>
                 `).join('')}
             </div>
         `;
     }
 
+    // أزرار التحكم (إضافة مرفق، تعديل، حذف)
     const buttonsHtml = `
-        <button onclick="addAttachment('${property.name}')">إضافة مرفق</button>
-        <button onclick="editProperty('${property.name}')">تعديل</button>
-        <button onclick="deleteProperty('${property.name}')">حذف</button>
+      <div class="d-flex gap-2 mt-3">
+        <button class="btn btn-outline-primary btn-sm" onclick="addAttachment('${property.name}')">
+          <i class="bi bi-paperclip"></i> إضافة مرفق
+        </button>
+        <button class="btn btn-outline-warning btn-sm" onclick="editProperty('${property.name}')">
+          <i class="bi bi-pencil-square"></i> تعديل
+        </button>
+        <button class="btn btn-outline-danger btn-sm" onclick="deleteProperty('${property.name}')">
+          <i class="bi bi-trash"></i> حذف
+        </button>
+      </div>
     `;
 
-    propertyItem.innerHTML = `
-        <h3>${property.name}</h3>
-        <p><strong>الموقع:</strong> ${property.location}</p>
-        <p><strong>السعر:</strong> ${property.price} ريال</p>
-        <p><strong>النوع:</strong> ${property.type}</p>
-        <p>${property.description}</p>
+    card.innerHTML = `
         ${firstImageHtml}
-        ${buttonsHtml}
-        ${attachmentsHtml}
+        <div class="card-body">
+            <h5 class="card-title">${property.name}</h5>
+            <p class="card-text"><strong>الموقع:</strong> ${property.location}</p>
+            <p class="card-text"><strong>السعر:</strong> ${property.price} ريال</p>
+            <p class="card-text"><strong>النوع:</strong> ${property.type}</p>
+            <p class="card-text">${property.description}</p>
+            ${buttonsHtml}
+            ${attachmentsHtml}
+        </div>
     `;
-    propertyList.appendChild(propertyItem);
+
+    propertyList.appendChild(card);
 }
 
 // فتح النافذة المنبثقة لإضافة المرفقات
@@ -203,8 +217,8 @@ function deleteProperty(propertyName) {
 
 // تعديل العقار
 function editProperty(propertyName) {
-    // في تطبيق حقيقي، يُفضل إظهار نموذج تعديل منفصل أو نافذة منبثقة.
-    // هنا سنقوم فقط بجلب بيانات العقار ووضعها في حقول الإدخال ثم حذف العقار القديم وإعادة إنشاءه عند الضغط على "إضافة العقار".
+    // في تطبيق حقيقي، يمكن إظهار نافذة أو صفحة خاصة بالتعديل.
+    // هنا سنقوم فقط بجلب بيانات العقار وعرضها في الحقول ثم حذفه وإعادة إدخاله عند الضغط على "إضافة العقار".
     fetch(`${SERVER_URL}?action=getProperty&propertyName=${encodeURIComponent(propertyName)}`)
         .then(response => response.json())
         .then(data => {
@@ -239,7 +253,8 @@ function filterPropertiesAdmin() {
                 const matchesType = type ? (property.type === type) : true;
                 return matchesPrice && matchesType;
             });
-            propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
+
+            propertyList.innerHTML = '<h2 class="h5">العقارات المتوفرة</h2>';
             filtered.forEach(addPropertyToList);
         })
         .catch(error => console.error('Error:', error));
