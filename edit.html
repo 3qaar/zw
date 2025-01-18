@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>إدارة العقارات</title>
-  
+
   <!-- ربط Bootstrap CSS من CDN -->
   <link
     rel="stylesheet"
@@ -25,16 +25,16 @@
     .navbar-brand {
       font-weight: bold;
     }
-    .property-card {
+    .card {
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 1rem;
     }
     .property-card img {
       border-top-right-radius: 8px;
       border-top-left-radius: 8px;
       object-fit: cover;
       height: 180px;
+      width: 100%;
     }
     .modal-content {
       direction: rtl; /* لإظهار النصوص بالعربية داخل المودال */
@@ -59,6 +59,7 @@
       color: white;
       border-radius: 50%;
       padding: 0.3rem 0.5rem;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -107,7 +108,8 @@
               <label for="propertyImages" class="form-label">الصور</label>
               <input type="file" id="propertyImages" class="form-control" accept="image/*" multiple>
             </div>
-            <button onclick="addProperty()" class="btn btn-success w-100">إضافة العقار</button>
+            <!-- زر إضافة العقار: تأكدنا من وضع type="button" حتى لا يرسل نموذج افتراضي -->
+            <button type="button" onclick="addProperty()" class="btn btn-success w-100">إضافة العقار</button>
           </div>
         </div>
       </div>
@@ -142,7 +144,7 @@
 
         <div class="property-list" id="propertyList">
           <h2 class="h5">العقارات المتوفرة</h2>
-          <!-- سيتم إدراج العناصر ديناميكيًا هنا -->
+          <!-- سيتم إدراج العناصر ديناميكيًا هنا من خلال script.js -->
         </div>
       </div>
     </div>
