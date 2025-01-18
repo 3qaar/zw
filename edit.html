@@ -180,210 +180,40 @@
         </div>
     </div>
 
-    <!-- نافذة منبثقة لإضافة المرفقات -->
-    <div id="attachmentModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h3>إضافة مرفق جديد</h3>
-            <input type="file" id="newAttachment" accept="image/*">
-            <button onclick="saveNewAttachment()">إضافة المرفق</button>
-        </div>
-    </div>
-
     <script>
-        const propertyList = document.getElementById('propertyList');
-        let currentPropertyName = '';
-
-        // فتح النافذة المنبثقة لإضافة المرفقات
-        function addAttachment(propertyName) {
-            currentPropertyName = propertyName;
-            const modal = document.getElementById('attachmentModal');
-            modal.style.display = "block";
-        }
-
-        // إغلاق النافذة المنبثقة
-        function closeModal() {
-            const modal = document.getElementById('attachmentModal');
-            modal.style.display = "none";
-        }
-
-        // حفظ المرفق الجديد
-        function saveNewAttachment() {
-            const newAttachment = document.getElementById('newAttachment').files[0];
-            if (!newAttachment) {
-                alert('يرجى اختيار صورة جديدة.');
-                return;
+        async function uploadFilesToServer(files) {
+            const formData = new FormData();
+            for (const file of files) {
+                formData.append('files', file);
             }
-
-            const reader = new FileReader();
-            reader.onload = () => {
-                const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-                const property = storedProperties.find(p => p.name === currentPropertyName);
-
-                if (!property) {
-                    alert('العقار غير موجود.');
-                    return;
-                }
-
-                property.images.push(reader.result);
-                localStorage.setItem('properties', JSON.stringify(storedProperties));
-                alert('تم إضافة المرفق بنجاح.');
-
-                // تحديث العقار المعروض في القائمة بعد الإضافة
-                propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
-                storedProperties.forEach(addPropertyToList);
-                closeModal();
-            };
-            reader.readAsDataURL(newAttachment);
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            return response.json(); // يتوقع أن يرجع السيرفر روابط الصور
         }
 
-        // حذف المرفق
-        function deleteAttachment(propertyName, index) {
-            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const property = storedProperties.find(p => p.name === propertyName);
-
-            if (!property) {
-                alert('العقار غير موجود.');
-                return;
-            }
-
-            property.images.splice(index, 1); // إزالة المرفق بناءً على الفهرس
-            localStorage.setItem('properties', JSON.stringify(storedProperties));
-
-            // تحديث العقار المعروض في القائمة بعد الحذف
-            propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
-            storedProperties.forEach(addPropertyToList);
-        }
-
-        // حذف العقار بالكامل
-        function deleteProperty(propertyName) {
-            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const updatedProperties = storedProperties.filter(p => p.name !== propertyName);
-            localStorage.setItem('properties', JSON.stringify(updatedProperties));
-
-            // تحديث العقارات المعروضة بعد الحذف
-            propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
-            updatedProperties.forEach(addPropertyToList);
-            alert('تم حذف العقار بنجاح.');
-        }
-
-        // تعديل العقار
-        function editProperty(propertyName) {
-            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const property = storedProperties.find(p => p.name === propertyName);
-
-            if (!property) {
-                alert('العقار غير موجود.');
-                return;
-            }
-
-            document.getElementById('propertyName').value = property.name;
-            document.getElementById('propertyLocation').value = property.location;
-            document.getElementById('propertyPrice').value = property.price;
-            document.getElementById('propertyDescription').value = property.description;
-            document.getElementById('propertyType').value = property.type;
-
-            // حذف العقار القديم بعد التعديل
-            deleteProperty(propertyName);
-
-            // إضافة العقار المعدل بعد تعبئة الحقول
-            const updatedProperty = { ...property, name: property.name };
-            addProperty();
-        }
-
-        // إضافة عقار جديد
-        function addProperty() {
+        async function addProperty() {
             const name = document.getElementById('propertyName').value;
             const location = document.getElementById('propertyLocation').value;
             const price = document.getElementById('propertyPrice').value;
             const description = document.getElementById('propertyDescription').value;
             const type = document.getElementById('propertyType').value;
-            const imageInput = document.getElementById('propertyImages');
-            const images = Array.from(imageInput.files);
+            const files = document.getElementById('propertyImages').files;
 
-            if (!name || !location || !price || !description || images.length === 0 || !type) {
+            if (!name || !location || !price || !description || files.length === 0 || !type) {
                 alert('يرجى تعبئة جميع الحقول واختيار صور.');
                 return;
             }
 
-            const imagePromises = images.map(image => {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(image);
-                });
-            });
+            // رفع الصور إلى السيرفر
+            const uploadedFiles = await uploadFilesToServer(files);
 
-            Promise.all(imagePromises).then(imageDataArray => {
-                const property = { name, location, price, description, type, images: imageDataArray };
-
-                const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-                storedProperties.push(property);
-                localStorage.setItem('properties', JSON.stringify(storedProperties));
-
-                addPropertyToList(property);
-
-                document.getElementById('propertyName').value = '';
-                document.getElementById('propertyLocation').value = '';
-                document.getElementById('propertyPrice').value = '';
-                document.getElementById('propertyDescription').value = '';
-                imageInput.value = '';
-            });
-        }
-
-        // إضافة العقار إلى القائمة
-        function addPropertyToList(property) {
-            const propertyItem = document.createElement('div');
-            propertyItem.className = 'property-item';
-
-            const firstImageHtml = property.images.length > 0 ? `<img src="${property.images[0]}" alt="${property.name}" style="display: block; max-width: 100%; border-radius: 4px;">` : '';
-
-            const attachmentsHtml = `
-                <div class="attachments">
-                    ${property.images.map((img, index) => `
-                        <div class="attachment-item">
-                            <img src="${img}" alt="مرفق ${index + 1}">
-                            <button onclick="deleteAttachment('${property.name}', ${index})">حذف</button>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            const buttonsHtml = `
-                <button onclick="addAttachment('${property.name}')">إضافة مرفق</button>
-                <button onclick="editProperty('${property.name}')">تعديل</button>
-                <button onclick="deleteProperty('${property.name}')">حذف</button>
-            `;
-
-            propertyItem.innerHTML = `
-                <h3>${property.name}</h3>
-                <p><strong>الموقع:</strong> ${property.location}</p>
-                <p><strong>السعر:</strong> ${property.price} ريال</p>
-                <p><strong>النوع:</strong> ${property.type}</p>
-                <p>${property.description}</p>
-                ${firstImageHtml}
-                ${buttonsHtml}
-                ${attachmentsHtml}
-            `;
-            propertyList.appendChild(propertyItem);
-        }
-
-        // تصفية العقارات
-        function filterPropertiesAdmin() {
-            const minPrice = parseFloat(document.getElementById('minPriceAdmin').value) || 0;
-            const maxPrice = parseFloat(document.getElementById('maxPriceAdmin').value) || Infinity;
-            const type = document.getElementById('propertyTypeAdmin').value;
-
+            const property = { name, location, price, description, type, images: uploadedFiles };
             const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            const filteredProperties = storedProperties.filter(property => {
-                const matchesPrice = property.price >= minPrice && property.price <= maxPrice;
-                const matchesType = type ? property.type === type : true;
-                return matchesPrice && matchesType;
-            });
-
-            propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
-            filteredProperties.forEach(addPropertyToList);
+            storedProperties.push(property);
+            localStorage.setItem('properties', JSON.stringify(storedProperties));
+            alert('تمت إضافة العقار بنجاح!');
         }
     </script>
 </body>
