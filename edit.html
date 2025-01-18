@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة العقارات</title>
     <style>
-        /* تنسيقات بسيطة للواجهة */
         body {
             font-family: Arial, sans-serif;
             direction: rtl;
@@ -14,50 +13,31 @@
             margin: 0;
             padding: 0;
         }
-
         header {
             background-color: #4CAF50;
             color: white;
             padding: 10px;
             text-align: center;
         }
-
         .container {
             width: 80%;
             margin: 20px auto;
         }
-
-        h2 {
-            color: #333;
-        }
-
-        .property-upload input,
-        .property-upload select,
-        .property-upload textarea,
-        .filter-section input,
-        .filter-section select {
+        h2 { color: #333; }
+        input, select, textarea, button {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
-
-        .property-upload button,
-        .filter-section button {
+        button {
             background-color: #4CAF50;
             color: white;
-            padding: 10px;
             border: none;
-            border-radius: 4px;
             cursor: pointer;
         }
-
-        .property-upload button:hover,
-        .filter-section button:hover {
-            background-color: #45a049;
-        }
-
+        button:hover { background-color: #45a049; }
         .property-item {
             background-color: #fff;
             padding: 20px;
@@ -65,81 +45,9 @@
             border-radius: 4px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-
         .property-item img {
             max-width: 100%;
             border-radius: 4px;
-        }
-
-        .attachments {
-            margin-top: 10px;
-        }
-
-        .attachment-item {
-            display: inline-block;
-            margin-right: 10px;
-            margin-bottom: 10px;
-            position: relative;
-        }
-
-        .attachment-item img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-
-        .attachment-item button {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: red;
-            color: white;
-            border: none;
-            padding: 5px;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .attachment-item button:hover {
-            background-color: darkred;
-        }
-
-        .add-attachment-section {
-            margin-top: 20px;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-content {
-            background-color: #fff;
-            margin: 10% auto;
-            padding: 20px;
-            border-radius: 4px;
-            width: 60%;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -149,7 +57,7 @@
     </header>
     <div class="container">
         <h2>إضافة عقار جديد</h2>
-        <div class="property-upload" id="adminSection">
+        <div id="adminSection">
             <input type="text" id="propertyName" placeholder="اسم العقار" required>
             <input type="text" id="propertyLocation" placeholder="الموقع" required>
             <input type="number" id="propertyPrice" placeholder="السعر (بالريال السعودي)" required>
@@ -163,58 +71,132 @@
             <button onclick="addProperty()">إضافة العقار</button>
         </div>
 
-        <div class="filter-section">
-            <input type="number" id="minPriceAdmin" placeholder="السعر الأدنى" />
-            <input type="number" id="maxPriceAdmin" placeholder="السعر الأعلى" />
-            <select id="propertyTypeAdmin">
-                <option value="">النوع</option>
-                <option value="شقة">شقة</option>
-                <option value="فيلا">فيلا</option>
-                <option value="أرض">أرض</option>
-            </select>
-            <button onclick="filterPropertiesAdmin()">تصفية</button>
-        </div>
-
-        <div class="property-list" id="propertyList">
+        <div id="propertyList">
             <h2>العقارات المتوفرة</h2>
         </div>
     </div>
 
     <script>
-        async function uploadFilesToServer(files) {
-            const formData = new FormData();
-            for (const file of files) {
-                formData.append('files', file);
-            }
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-            return response.json(); // يتوقع أن يرجع السيرفر روابط الصور
+        const propertyList = document.getElementById('propertyList');
+
+        // تحميل العقارات من السيرفر
+        function loadProperties() {
+            fetch('server.php?action=fetch')
+                .then(response => response.json())
+                .then(properties => {
+                    propertyList.innerHTML = '<h2>العقارات المتوفرة</h2>';
+                    properties.forEach(addPropertyToList);
+                });
         }
 
-        async function addProperty() {
+        // إضافة عقار جديد
+        function addProperty() {
             const name = document.getElementById('propertyName').value;
             const location = document.getElementById('propertyLocation').value;
             const price = document.getElementById('propertyPrice').value;
             const description = document.getElementById('propertyDescription').value;
             const type = document.getElementById('propertyType').value;
-            const files = document.getElementById('propertyImages').files;
+            const images = document.getElementById('propertyImages').files;
 
-            if (!name || !location || !price || !description || files.length === 0 || !type) {
+            if (!name || !location || !price || !description || images.length === 0 || !type) {
                 alert('يرجى تعبئة جميع الحقول واختيار صور.');
                 return;
             }
 
-            // رفع الصور إلى السيرفر
-            const uploadedFiles = await uploadFilesToServer(files);
+            const formData = new FormData();
+            formData.append('action', 'add');
+            formData.append('name', name);
+            formData.append('location', location);
+            formData.append('price', price);
+            formData.append('description', description);
+            formData.append('type', type);
+            Array.from(images).forEach((image, index) => {
+                formData.append(`images[]`, image);
+            });
 
-            const property = { name, location, price, description, type, images: uploadedFiles };
-            const storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
-            storedProperties.push(property);
-            localStorage.setItem('properties', JSON.stringify(storedProperties));
-            alert('تمت إضافة العقار بنجاح!');
+            fetch('server.php', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert('تم إضافة العقار بنجاح');
+                        loadProperties();
+                    } else {
+                        alert('حدث خطأ أثناء إضافة العقار');
+                    }
+                });
         }
+
+        // إضافة العقار إلى القائمة
+        function addPropertyToList(property) {
+            const propertyItem = document.createElement('div');
+            propertyItem.className = 'property-item';
+            const imagesHtml = property.images.map(img => `<img src="${img}" alt="${property.name}">`).join('');
+            propertyItem.innerHTML = `
+                <h3>${property.name}</h3>
+                <p><strong>الموقع:</strong> ${property.location}</p>
+                <p><strong>السعر:</strong> ${property.price} ريال</p>
+                <p><strong>النوع:</strong> ${property.type}</p>
+                <p>${property.description}</p>
+                ${imagesHtml}
+                <button onclick="deleteProperty('${property.name}')">حذف</button>
+            `;
+            propertyList.appendChild(propertyItem);
+        }
+
+        // حذف عقار
+        function deleteProperty(propertyName) {
+            fetch(`server.php?action=delete&name=${encodeURIComponent(propertyName)}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert('تم حذف العقار');
+                        loadProperties();
+                    } else {
+                        alert('حدث خطأ أثناء حذف العقار');
+                    }
+                });
+        }
+
+        // تحميل العقارات عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', loadProperties);
     </script>
 </body>
 </html>
+
+<!-- PHP Code (server.php) -->
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'add') {
+        $name = $_POST['name'];
+        $location = $_POST['location'];
+        $price = $_POST['price'];
+        $description = $_POST['description'];
+        $type = $_POST['type'];
+        $images = [];
+
+        if (!empty($_FILES['images']['name'][0])) {
+            foreach ($_FILES['images']['tmp_name'] as $tmpName) {
+                $imageData = base64_encode(file_get_contents($tmpName));
+                $images[] = "data:image/jpeg;base64,$imageData";
+            }
+        }
+
+        $properties = json_decode(file_get_contents('properties.json'), true) ?? [];
+        $properties[] = compact('name', 'location', 'price', 'description', 'type', 'images');
+        file_put_contents('properties.json', json_encode($properties));
+        echo json_encode(['success' => true]);
+        exit;
+    }
+} elseif ($_GET['action'] === 'fetch') {
+    echo file_get_contents('properties.json');
+    exit;
+} elseif ($_GET['action'] === 'delete') {
+    $name = $_GET['name'];
+    $properties = json_decode(file_get_contents('properties.json'), true) ?? [];
+    $properties = array_filter($properties, fn($property) => $property['name'] !== $name);
+    file_put_contents('properties.json', json_encode($properties));
+    echo json_encode(['success' => true]);
+    exit;
+}
+?>
