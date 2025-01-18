@@ -39,7 +39,7 @@ function saveUploadedImages($files, $uploadsDir) {
             $destination = $uploadsDir . '/' . $uniqueName;
 
             if (move_uploaded_file($tmpName, $destination)) {
-                // يمكن الوصول إلى الصورة عبر مسار نسبي أو مطلق حسب الإعدادات
+                // مسار الوصول إلى الصورة (نسبي أو مطلق حسب الحاجة)
                 $savedPaths[] = 'uploads/' . $uniqueName;
             }
         }
@@ -99,7 +99,7 @@ switch ($action) {
         // قراءة العقارات
         $properties = getAllProperties($jsonFile);
 
-        // التحقق من عدم تكرار الاسم (مثال)
+        // التحقق من عدم تكرار الاسم (مثال بسيط)
         foreach ($properties as $p) {
             if ($p['name'] === $name) {
                 echo json_encode(['success' => false, 'message' => 'عقار بنفس الاسم موجود مسبقًا.']);
@@ -153,6 +153,9 @@ switch ($action) {
         foreach ($properties as $index => $p) {
             if ($p['name'] === $propertyName) {
                 // يمكن هنا أيضًا حذف الصور من المجلد إن أردت
+                // foreach ($p['images'] as $imgPath) {
+                //   @unlink(__DIR__ . '/' . $imgPath);
+                // }
                 $found = true;
                 array_splice($properties, $index, 1);
                 break;
@@ -224,7 +227,7 @@ switch ($action) {
         // حذف المرفق إذا كان الفهرس صحيحًا
         if (isset($properties[$propertyIndex]['images'][$index])) {
             // يمكن أيضًا حذف الملف من المجلد لو أردت
-            // unlink(__DIR__ . '/' . $properties[$propertyIndex]['images'][$index]);
+            // @unlink(__DIR__ . '/' . $properties[$propertyIndex]['images'][$index]);
 
             array_splice($properties[$propertyIndex]['images'], $index, 1);
             saveAllProperties($jsonFile, $properties);
