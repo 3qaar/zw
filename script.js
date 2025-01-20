@@ -68,7 +68,7 @@ fetch(SERVER_URL)
             } else {
                 alert(data.message || 'حدث خطأ في إضافة العقار.');
             }
-        })
+         })
         .catch(error => console.error('Error:', error));
     
 }
