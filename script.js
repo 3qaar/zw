@@ -31,19 +31,17 @@ function addProperty() {
     const description = document.getElementById('propertyDescription').value.trim();
     const type = document.getElementById('propertyType').value;
     const imageInput = document.getElementById('propertyImages');
-    window.alert("1");
 
     if (!name || !location || !price || !description || !type) {
         alert('يرجى تعبئة جميع الحقول.');
         return;
     }
-    window.alert("2");
+
     if (imageInput.files.length === 0) {
         alert('يرجى اختيار صورة واحدة على الأقل.');
         return;
     }
-    window.alert("3");
-
+ 
     // نستخدم FormData لإرسال البيانات والملفات للسيرفر
     const formData = new FormData();
     formData.append('action', 'create');
@@ -52,14 +50,12 @@ function addProperty() {
     formData.append('price', price);
     formData.append('description', description);
     formData.append('type', type);
-    window.alert("4");
-
+    
     // إضافة الملفات لـ FormData
     for (let i = 0; i < imageInput.files.length; i++) {
         formData.append('images[]', imageInput.files[i]);
     }
-    window.alert("5");
-
+    
     // إرسال الطلب للسيرفر
     fetch(SERVER_URL, {
         method: 'POST',
@@ -82,7 +78,7 @@ function addProperty() {
             }
         })
         .catch(error => console.error('Error:', error));
-    window.alert("6");
+    
 }
 
 // إضافة العقار إلى واجهة العرض
