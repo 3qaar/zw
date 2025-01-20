@@ -49,9 +49,12 @@ function addProperty() {
         formData.append('images[]', imageInput.files[i]);
     }
     
-   
-        .then(response => response.json())
-        .then(data => {
+fetch(SERVER_URL)
+    .then(response => response.json())
+    .then(data => {
+        // معالجة البيانات
+    });
+
             if (data.success) {
                 alert('تم إضافة العقار بنجاح.');
                 // إعادة تعيين الحقول
