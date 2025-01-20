@@ -12,8 +12,6 @@
             direction: rtl;
             text-align: right;
             background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
         }
 
         header {
@@ -21,11 +19,6 @@
             color: white;
             padding: 15px;
             text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .container {
-            max-width: 900px;
         }
 
         .card {
@@ -34,25 +27,13 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        .property-item img {
-            max-width: 100%;
-            border-radius: 4px;
-        }
-
-        .btn {
-            margin: 5px 0;
-        }
-
         .modal-content {
             direction: rtl;
         }
 
-        .property-upload label {
-            font-weight: bold;
-        }
-
-        .property-upload button {
-            margin-top: 10px;
+        .card img {
+            max-height: 200px;
+            object-fit: cover;
         }
     </style>
 </head>
@@ -60,16 +41,16 @@
     <header>
         <h1>إدارة العقارات</h1>
     </header>
-    <div class="container">
-        <h2 class="mb-3">إضافة عقار جديد</h2>
+    <div class="container my-4">
+        <h2 class="mb-4">إضافة عقار جديد</h2>
         <div class="card p-3 mb-4">
             <div class="property-upload">
                 <label for="propertyName">اسم العقار</label>
-                <input type="text" id="propertyName" class="form-control mb-3" placeholder="اسم العقار" required>
+                <input type="text" id="propertyName" class="form-control mb-3" placeholder="اسم العقار">
                 <label for="propertyLocation">الموقع</label>
-                <input type="text" id="propertyLocation" class="form-control mb-3" placeholder="الموقع" required>
-                <label for="propertyPrice">السعر (بالريال السعودي)</label>
-                <input type="number" id="propertyPrice" class="form-control mb-3" placeholder="500000" required>
+                <input type="text" id="propertyLocation" class="form-control mb-3" placeholder="الموقع">
+                <label for="propertyPrice">السعر</label>
+                <input type="number" id="propertyPrice" class="form-control mb-3" placeholder="500000">
                 <label for="propertyType">النوع</label>
                 <select id="propertyType" class="form-select mb-3">
                     <option value="شقة">شقة</option>
@@ -77,34 +58,48 @@
                     <option value="أرض">أرض</option>
                 </select>
                 <label for="propertyDescription">وصف العقار</label>
-                <textarea id="propertyDescription" class="form-control mb-3" rows="3" placeholder="وصف موجز للعقار"></textarea>
-                <label for="propertyImages">الصور</label>
+                <textarea id="propertyDescription" class="form-control mb-3" rows="3" placeholder="وصف موجز"></textarea>
+                <label for="propertyImages">إضافة الصور</label>
                 <input type="file" id="propertyImages" class="form-control mb-3" accept="image/*" multiple>
                 <button class="btn btn-success w-100" onclick="addProperty()">إضافة العقار</button>
             </div>
         </div>
 
-        <h2 class="mb-3">العقارات المتوفرة</h2>
+        <h2 class="mb-4">العقارات المتوفرة</h2>
         <div id="propertyList" class="row">
-            <!-- سيتم إدراج العقارات هنا -->
+            <!-- العقارات ستظهر هنا -->
         </div>
     </div>
 
     <!-- نافذة تعديل العقار -->
-    <div id="attachmentModal" class="modal fade" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">إضافة مرفق جديد</h5>
+                    <h5 class="modal-title" id="editModalLabel">تعديل العقار</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="newAttachment">يرجى اختيار الملف</label>
-                    <input type="file" id="newAttachment" class="form-control">
+                    <label for="editName">اسم العقار</label>
+                    <input type="text" id="editName" class="form-control mb-3">
+                    <label for="editLocation">الموقع</label>
+                    <input type="text" id="editLocation" class="form-control mb-3">
+                    <label for="editPrice">السعر</label>
+                    <input type="number" id="editPrice" class="form-control mb-3">
+                    <label for="editType">النوع</label>
+                    <select id="editType" class="form-select mb-3">
+                        <option value="شقة">شقة</option>
+                        <option value="فيلا">فيلا</option>
+                        <option value="أرض">أرض</option>
+                    </select>
+                    <label for="editDescription">وصف العقار</label>
+                    <textarea id="editDescription" class="form-control mb-3" rows="3"></textarea>
+                    <label for="editImages">تعديل الصور</label>
+                    <input type="file" id="editImages" class="form-control mb-3" accept="image/*" multiple>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-                    <button class="btn btn-success" onclick="saveNewAttachment()">إضافة المرفق</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button class="btn btn-success" onclick="saveEdit()">حفظ التعديلات</button>
                 </div>
             </div>
         </div>
@@ -114,29 +109,27 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const propertyList = document.getElementById('propertyList');
-        let currentPropertyName = '';
+        let currentEditingProperty = null;
 
         function addProperty() {
-            const name = document.getElementById('propertyName').value.trim();
-            const location = document.getElementById('propertyLocation').value.trim();
-            const price = document.getElementById('propertyPrice').value.trim();
-            const description = document.getElementById('propertyDescription').value.trim();
+            const name = document.getElementById('propertyName').value;
+            const location = document.getElementById('propertyLocation').value;
+            const price = document.getElementById('propertyPrice').value;
+            const description = document.getElementById('propertyDescription').value;
             const type = document.getElementById('propertyType').value;
-            const imageInput = document.getElementById('propertyImages');
+            const images = Array.from(document.getElementById('propertyImages').files).map(file => URL.createObjectURL(file));
 
             if (!name || !location || !price || !description || !type) {
                 alert('يرجى تعبئة جميع الحقول.');
                 return;
             }
 
-            const images = Array.from(imageInput.files).map(file => URL.createObjectURL(file));
-
             const property = { name, location, price, description, type, images };
-
-            // تحديث واجهة المستخدم
             addPropertyToList(property);
+            resetForm();
+        }
 
-            // مسح الحقول
+        function resetForm() {
             document.getElementById('propertyName').value = '';
             document.getElementById('propertyLocation').value = '';
             document.getElementById('propertyPrice').value = '';
@@ -163,44 +156,45 @@
                     <p class="card-text"><strong>السعر:</strong> ${property.price} ريال</p>
                     <p class="card-text"><strong>النوع:</strong> ${property.type}</p>
                     <p class="card-text">${property.description}</p>
-                    <button class="btn btn-warning btn-sm" onclick="editProperty('${property.name}')">تعديل</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteProperty('${property.name}')">حذف</button>
+                    <button class="btn btn-warning btn-sm" onclick="openEditModal('${property.name}', '${property.location}', '${property.price}', '${property.type}', '${property.description}')">تعديل</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteProperty(this)">حذف</button>
                 </div>
             `;
             col.appendChild(card);
             propertyList.appendChild(col);
         }
 
-        function editProperty(propertyName) {
-            const card = [...propertyList.children].find(col => col.querySelector('.card-title').textContent === propertyName);
-
-            if (!card) {
-                alert('العقار غير موجود.');
-                return;
-            }
-
-            const name = card.querySelector('.card-title').textContent;
-            const location = card.querySelectorAll('.card-text')[0].textContent.split(': ')[1];
-            const price = card.querySelectorAll('.card-text')[1].textContent.split(': ')[1];
-            const type = card.querySelectorAll('.card-text')[2].textContent.split(': ')[1];
-            const description = card.querySelectorAll('.card-text')[3].textContent;
-
-            document.getElementById('propertyName').value = name;
-            document.getElementById('propertyLocation').value = location;
-            document.getElementById('propertyPrice').value = price;
-            document.getElementById('propertyDescription').value = description;
-            document.getElementById('propertyType').value = type;
-
-            card.remove();
+        function openEditModal(name, location, price, type, description) {
+            currentEditingProperty = { name, location, price, type, description };
+            document.getElementById('editName').value = name;
+            document.getElementById('editLocation').value = location;
+            document.getElementById('editPrice').value = price;
+            document.getElementById('editType').value = type;
+            document.getElementById('editDescription').value = description;
+            new bootstrap.Modal(document.getElementById('editModal')).show();
         }
 
-        function deleteProperty(propertyName) {
-            const col = [...propertyList.children].find(col => col.querySelector('.card-title').textContent === propertyName);
+        function saveEdit() {
+            if (!currentEditingProperty) return;
 
-            if (col) {
-                col.remove();
-                alert('تم حذف العقار بنجاح.');
-            }
+            const name = document.getElementById('editName').value;
+            const location = document.getElementById('editLocation').value;
+            const price = document.getElementById('editPrice').value;
+            const type = document.getElementById('editType').value;
+            const description = document.getElementById('editDescription').value;
+
+            currentEditingProperty.name = name;
+            currentEditingProperty.location = location;
+            currentEditingProperty.price = price;
+            currentEditingProperty.type = type;
+            currentEditingProperty.description = description;
+
+            alert('تم حفظ التعديلات بنجاح.');
+            location.reload();
+        }
+
+        function deleteProperty(button) {
+            button.closest('.col-md-6').remove();
         }
     </script>
 </body>
