@@ -1,5 +1,5 @@
 // رابط ملف السيرفر الذي يستقبل الطلبات
-const SERVER_URL = 'server.php';
+
 
 // عنصر يحتوي على قائمة العرض
 const propertyList = document.getElementById('propertyList');
@@ -13,15 +13,7 @@ window.onload = () => {
 };
 
 // جلب جميع العقارات من الخادم وعرضها
-function fetchProperties() {
-    fetch(`${SERVER_URL}?action=read`)
-        .then(response => response.json())
-        .then(data => {
-            propertyList.innerHTML = '<h2 class="h5">العقارات المتوفرة</h2>';
-            data.forEach(addPropertyToList);
-        })
-        .catch(error => console.error('Error:', error));
-}
+
 
 // إضافة عقار جديد
 function addProperty() {
@@ -56,11 +48,7 @@ function addProperty() {
         formData.append('images[]', imageInput.files[i]);
     }
     
-    // إرسال الطلب للسيرفر
-    fetch(SERVER_URL, {
-        method: 'POST',
-        body: formData
-    })
+   
         .then(response => response.json())
         .then(data => {
             if (data.success) {
