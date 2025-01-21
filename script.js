@@ -1,5 +1,5 @@
 // رابط ملف السيرفر الذي يستقبل الطلبات
-const SERVER_URL = 'http://localhost:3000'; // استبدل الرابط حسب الخادم الخاص بك
+const SERVER_URL = 'http://localhost:2256'; // استبدل الرابط حسب الخادم الخاص بك
 
 // عنصر يحتوي على قائمة العرض
 const propertyList = document.getElementById('propertyList');
