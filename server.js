@@ -3,7 +3,7 @@ const cors = require('cors');
 const multer = require('multer'); // لتخزين الصور
 
 const app = express();
-const port = 3000;
+const port = 2256;
 
 // إعداد CORS وقبول JSON
 app.use(cors());
