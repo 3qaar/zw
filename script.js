@@ -1,7 +1,6 @@
 // رابط ملف السيرفر الذي يستقبل الطلبات
 const SERVER_URL = 'http://127.0.0.1:5000/properties'; // استبدل الرابط حسب الخادم الخاص بك
 
-
 // عنصر يحتوي على قائمة العرض
 const propertyList = document.getElementById('propertyList');
 
@@ -14,7 +13,15 @@ window.onload = () => {
 };
 
 // جلب جميع العقارات من الخادم وعرضها
-
+function fetchProperties() {
+    fetch(SERVER_URL)
+        .then(response => response.json())
+        .then(data => {
+            propertyList.innerHTML = '<h2 class="h5">العقارات المتوفرة</h2>';
+            data.forEach(addPropertyToList);
+        })
+        .catch(error => console.error('Error:', error));
+}
 
 // إضافة عقار جديد
 function addProperty() {
@@ -49,40 +56,38 @@ function addProperty() {
         formData.append('images[]', imageInput.files[i]);
     }
     
-fetch(SERVER_URL)
+    fetch(SERVER_URL, {
+        method: 'POST',
+        body: formData
+    })
     .then(response => response.json())
     .then(data => {
-        // معالجة البيانات
-    });
-
-            if (data.success) {
-                alert('تم إضافة العقار بنجاح.');
-                // إعادة تعيين الحقول
-                document.getElementById('propertyName').value = '';
-                document.getElementById('propertyLocation').value = '';
-                document.getElementById('propertyPrice').value = '';
-                document.getElementById('propertyDescription').value = '';
-                document.getElementById('propertyImages').value = '';
-                // تحديث القائمة
-                fetchProperties();
-            } else {
-                alert(data.message || 'حدث خطأ في إضافة العقار.');
-            }
-         })
-        .catch(error => console.error('Error:', error));
-    
+        if (data.success) {
+            alert('تم إضافة العقار بنجاح.');
+            // إعادة تعيين الحقول
+            document.getElementById('propertyName').value = '';
+            document.getElementById('propertyLocation').value = '';
+            document.getElementById('propertyPrice').value = '';
+            document.getElementById('propertyDescription').value = '';
+            document.getElementById('propertyImages').value = '';
+            // تحديث القائمة
+            fetchProperties();
+        } else {
+            alert(data.message || 'حدث خطأ في إضافة العقار.');
+        }
+    })
+    .catch(error => console.error('Error:', error));
 }
 
 // إضافة العقار إلى واجهة العرض
 function addPropertyToList(property) {
-    // إنشاء بطاقة لعرض بيانات العقار
     const card = document.createElement('div');
     card.className = 'card mb-3 property-card';
 
     // عرض صورة أولى في حال كانت موجودة
     let firstImageHtml = '';
     if (property.images && property.images.length > 0) {
-        firstImageHtml = `<img src="${property.images[0]}" alt="${property.name}" />`;
+        firstImageHtml = <img src="${property.images[0]}" alt="${property.name}" />;
     }
 
     // إعداد المرفقات (جميع الصور)
@@ -179,7 +184,7 @@ function saveNewAttachment() {
 function deleteAttachment(propertyName, index) {
     if (!confirm('هل أنت متأكد من حذف هذا المرفق؟')) return;
 
-    fetch(`${SERVER_URL}?action=deleteAttachment&propertyName=${encodeURIComponent(propertyName)}&index=${index}`)
+    fetch(${SERVER_URL}?action=deleteAttachment&propertyName=${encodeURIComponent(propertyName)}&index=${index})
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -196,7 +201,7 @@ function deleteAttachment(propertyName, index) {
 function deleteProperty(propertyName) {
     if (!confirm('هل أنت متأكد من حذف العقار بالكامل؟')) return;
 
-    fetch(`${SERVER_URL}?action=deleteProperty&propertyName=${encodeURIComponent(propertyName)}`)
+    fetch(${SERVER_URL}?action=deleteProperty&propertyName=${encodeURIComponent(propertyName)})
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -213,7 +218,7 @@ function deleteProperty(propertyName) {
 function editProperty(propertyName) {
     // في تطبيق حقيقي، يمكن إظهار نافذة أو صفحة خاصة بالتعديل.
     // هنا سنقوم فقط بجلب بيانات العقار وعرضها في الحقول ثم حذفه وإعادة إدخاله عند الضغط على "إضافة العقار".
-    fetch(`${SERVER_URL}?action=getProperty&propertyName=${encodeURIComponent(propertyName)}`)
+    fetch(${SERVER_URL}?action=getProperty&propertyName=${encodeURIComponent(propertyName)})
         .then(response => response.json())
         .then(data => {
             if (!data.success) {
@@ -238,7 +243,7 @@ function filterPropertiesAdmin() {
     const maxPrice = parseFloat(document.getElementById('maxPriceAdmin').value) || Number.MAX_VALUE;
     const type = document.getElementById('propertyTypeAdmin').value;
 
-    fetch(`${SERVER_URL}?action=read`)
+    fetch(${SERVER_URL}?action=read)
         .then(response => response.json())
         .then(data => {
             const filtered = data.filter(property => {
