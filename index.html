@@ -169,6 +169,7 @@
   <script>
     let properties = [];
 
+    // دالة إضافة العقار
     function addProperty() {
       const name = document.getElementById("propertyName").value;
       const location = document.getElementById("propertyLocation").value;
@@ -190,14 +191,48 @@
         }
       }
 
-      properties.push(property);
+      // إرسال البيانات إلى السيرفر عبر POST
+      const formData = new FormData();
+      formData.append("name", property.name);
+      formData.append("location", property.location);
+      formData.append("price", property.price);
+      formData.append("type", property.type);
+      formData.append("description", property.description);
+      
+      for (let i = 0; i < images.length; i++) {
+        formData.append("images", images[i]);
+      }
 
-      displayProperties();
-
-      const toast = new bootstrap.Toast(document.getElementById("successToast"));
-      toast.show();
+      fetch("http://185.199.110.153/api/properties", {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log("Property added:", data);
+        displayProperties();  // إعادة عرض العقارات بعد إضافة الجديد
+        const toast = new bootstrap.Toast(document.getElementById("successToast"));
+        toast.show();
+      })
+      .catch(error => {
+        console.error("Error adding property:", error);
+      });
     }
 
+    // دالة جلب العقارات من السيرفر
+    function fetchProperties() {
+      fetch("http://185.199.110.153/api/properties")
+        .then(response => response.json())
+        .then(data => {
+          properties = data;
+          displayProperties();
+        })
+        .catch(error => {
+          console.error("Error fetching properties:", error);
+        });
+    }
+
+    // دالة عرض العقارات
     function displayProperties() {
       const propertyList = document.getElementById("propertyList");
       propertyList.innerHTML = "";
@@ -223,6 +258,11 @@
         propertyList.appendChild(propertyCard);
       });
     }
+
+    // جلب البيانات عند تحميل الصفحة
+    document.addEventListener("DOMContentLoaded", function () {
+      fetchProperties();
+    });
   </script>
 
   <!-- ربط Bootstrap JS -->
