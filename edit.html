@@ -1,29 +1,296 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>إدارة العقارات</title>
+
+  <!-- ربط Bootstrap CSS من CDN -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  />
+  <!-- أيقونات Bootstrap -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+  />
+
+  <!-- ربط ملف CSS الخارجي -->
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    body {
+      direction: rtl;
+      background-color: #f8f9fa;
+    }
+    .navbar-brand {
+      font-weight: bold;
+    }
+    .card {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .property-card img {
+      border-top-right-radius: 8px;
+      border-top-left-radius: 8px;
+      object-fit: cover;
+      height: 180px;
+      width: 100%;
+    }
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 1055;
+    }
+  </style>
 </head>
 <body>
 
-  <div>
-    <h2>إضافة عقار جديد</h2>
-    <input type="text" id="propertyName" placeholder="اسم العقار" />
-    <input type="text" id="propertyLocation" placeholder="الموقع" />
-    <input type="number" id="propertyPrice" placeholder="السعر" />
-    <select id="propertyType">
-      <option value="شقة">شقة</option>
-      <option value="فيلا">فيلا</option>
-      <option value="مزرعة">مزرعة</option>
-    </select>
-    <textarea id="propertyDescription" placeholder="وصف العقار"></textarea>
-    <input type="file" id="propertyImages" multiple />
-    <button onclick="addProperty()">إضافة العقار</button>
+  <!-- شريط التنقل العلوي -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <div class="container-fluid">
+      <span class="navbar-brand">إدارة العقارات</span>
+    </div>
+  </nav>
+
+  <!-- الحاوية الرئيسية -->
+  <div class="container my-4">
+    <div class="row">
+      <!-- إضافة عقار جديد -->
+      <div class="col-lg-4 mb-4">
+        <div class="card p-3">
+          <h2 class="h5 mb-3">إضافة عقار جديد</h2>
+          <div id="adminSection">
+            <div class="mb-3">
+              <label for="propertyName" class="form-label">اسم العقار</label>
+              <input type="text" id="propertyName" class="form-control" placeholder="مثال: شقة الراحة" required>
+            </div>
+            <div class="mb-3">
+              <label for="propertyLocation" class="form-label">الموقع</label>
+              <input type="text" id="propertyLocation" class="form-control" placeholder="مثال: جدة - حي الروضة" required>
+            </div>
+            <div class="mb-3">
+              <label for="propertyPrice" class="form-label">السعر (بالريال السعودي)</label>
+              <input type="number" id="propertyPrice" class="form-control" placeholder="500000" required>
+            </div>
+            <div class="mb-3">
+              <label for="propertyType" class="form-label">النوع</label>
+              <select id="propertyType" class="form-select">
+                <option value="شقة">شقة</option>
+                <option value="فيلا">فيلا</option>
+                <option value="أرض">أرض</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="propertyDescription" class="form-label">الوصف</label>
+              <textarea id="propertyDescription" class="form-control" rows="3" placeholder="وصف موجز للعقار"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="propertyImages" class="form-label">الصور</label>
+              <input type="file" id="propertyImages" class="form-control" accept="image/*" multiple>
+              <div id="imagePreview" class="d-flex flex-wrap mt-2"></div>
+            </div>
+            <button type="button" onclick="addProperty()" class="btn btn-success w-100">إضافة العقار</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- عرض العقارات -->
+      <div class="col-lg-8">
+        <div class="card p-3 mb-4">
+          <h2 class="h5 mb-3">تصفية العقارات</h2>
+          <div class="row g-2">
+            <div class="col-md-3">
+              <label for="minPriceAdmin" class="form-label">السعر الأدنى</label>
+              <input type="number" id="minPriceAdmin" class="form-control" placeholder="مثال: 100000" />
+            </div>
+            <div class="col-md-3">
+              <label for="maxPriceAdmin" class="form-label">السعر الأعلى</label>
+              <input type="number" id="maxPriceAdmin" class="form-control" placeholder="مثال: 700000" />
+            </div>
+            <div class="col-md-3">
+              <label for="propertyTypeAdmin" class="form-label">النوع</label>
+              <select id="propertyTypeAdmin" class="form-select">
+                <option value="">الكل</option>
+                <option value="شقة">شقة</option>
+                <option value="فيلا">فيلا</option>
+                <option value="أرض">أرض</option>
+              </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button onclick="filterPropertiesAdmin()" class="btn btn-primary w-100">تصفية</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="property-list" id="propertyList">
+          <h2 class="h5">العقارات المتوفرة</h2>
+          <!-- سيتم إدراج العناصر ديناميكيًا هنا من خلال script.js -->
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div id="propertyList"></div>
+  <!-- إشعارات Toast -->
+  <div class="toast-container">
+    <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">تمت الإضافة بنجاح!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
 
-  <script src="app.js"></script>
+  <!-- ربط مكتبة JavaScript -->
+  <script>
+    let properties = [];
+
+    // دالة إضافة العقار
+    function addProperty() {
+      const name = document.getElementById("propertyName").value;
+      const location = document.getElementById("propertyLocation").value;
+      const price = document.getElementById("propertyPrice").value;
+      const type = document.getElementById("propertyType").value;
+      const description = document.getElementById("propertyDescription").value;
+      const images = document.getElementById("propertyImages").files;
+
+      if (!name || !location || !price || !type || !description) {
+        alert("يرجى ملء جميع الحقول!");
+        return;
+      }
+
+      const property = { name, location, price, type, description, images: [] };
+
+      if (images.length > 0) {
+        for (let i = 0; i < images.length; i++) {
+          property.images.push(URL.createObjectURL(images[i]));
+        }
+      }
+
+      // إرسال البيانات إلى السيرفر عبر POST
+      const formData = new FormData();
+      formData.append("name", property.name);
+      formData.append("location", property.location);
+      formData.append("price", property.price);
+      formData.append("type", property.type);
+      formData.append("description", property.description);
+      
+      for (let i = 0; i < images.length; i++) {
+        formData.append("images", images[i]);
+      }
+
+      fetch("http://localhost:3000/properties", {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log("Property added:", data);
+        displayProperties();  // إعادة عرض العقارات بعد إضافة الجديد
+        const toast = new bootstrap.Toast(document.getElementById("successToast"));
+        toast.show();
+      })
+      .catch(error => {
+        console.error("Error adding property:", error);
+      });
+    }
+
+    // دالة جلب العقارات من السيرفر
+    function fetchProperties() {
+      fetch("http://localhost:3000/properties")
+        .then(response => response.json())
+        .then(data => {
+          properties = data;
+          displayProperties();
+        })
+        .catch(error => {
+          console.error("Error fetching properties:", error);
+        });
+    }
+
+    // دالة عرض العقارات
+    function displayProperties() {
+      const propertyList = document.getElementById("propertyList");
+      propertyList.innerHTML = "";
+
+      properties.forEach((property) => {
+        const propertyCard = document.createElement("div");
+        propertyCard.className = "card mb-3 property-card";
+        propertyCard.innerHTML = `
+          <div class="row g-0">
+            <div class="col-md-4">
+              <img src="${property.images[0] || 'placeholder.jpg'}" alt="صورة العقار" class="img-fluid rounded-start">
+            </div>
+            <div class="col-md-8">
+              <div class="card-body">
+                <h5 class="card-title">${property.name}</h5>
+                <p class="card-text">${property.description}</p>
+                <p class="card-text"><small class="text-muted">الموقع: ${property.location}</small></p>
+                <p class="card-text"><small class="text-muted">السعر: ${property.price} ريال</small></p>
+              </div>
+            </div>
+          </div>
+        `;
+        propertyList.appendChild(propertyCard);
+      });
+    }
+
+    // دالة تصفية العقارات
+    function filterPropertiesAdmin() {
+      const minPrice = document.getElementById("minPriceAdmin").value;
+      const maxPrice = document.getElementById("maxPriceAdmin").value;
+      const type = document.getElementById("propertyTypeAdmin").value;
+
+      let filteredProperties = properties;
+
+      if (minPrice) {
+        filteredProperties = filteredProperties.filter(property => property.price >= minPrice);
+      }
+      if (maxPrice) {
+        filteredProperties = filteredProperties.filter(property => property.price <= maxPrice);
+      }
+      if (type) {
+        filteredProperties = filteredProperties.filter(property => property.type === type);
+      }
+
+      displayFilteredProperties(filteredProperties);
+    }
+
+    // دالة لعرض العقارات المفلترة
+    function displayFilteredProperties(filteredProperties) {
+      const propertyList = document.getElementById("propertyList");
+      propertyList.innerHTML = "";
+
+      filteredProperties.forEach((property) => {
+        const propertyCard = document.createElement("div");
+        propertyCard.className = "card mb-3 property-card";
+        propertyCard.innerHTML = `
+          <div class="row g-0">
+            <div class="col-md-4">
+              <img src="${property.images[0] || 'placeholder.jpg'}" alt="صورة العقار" class="img-fluid rounded-start">
+            </div>
+            <div class="col-md-8">
+              <div class="card-body">
+                <h5 class="card-title">${property.name}</h5>
+                <p class="card-text">${property.description}</p>
+                <p class="card-text"><small class="text-muted">الموقع: ${property.location}</small></p>
+                <p class="card-text"><small class="text-muted">السعر: ${property.price} ريال</small></p>
+              </div>
+            </div>
+          </div>
+        `;
+        propertyList.appendChild(propertyCard);
+      });
+    }
+
+    // تحميل البيانات عند فتح الصفحة
+    window.onload = fetchProperties;
+  </script>
+
+  <!-- ربط مكتبة Bootstrap JavaScript من CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
