@@ -1,4 +1,4 @@
-const SERVER_URL = 'http://localhost:3000'; // رابط السيرفر
+const SERVER_URL = 'http://localhost:2256'; // رابط السيرفر
 
 const propertyList = document.getElementById('propertyList');
 
