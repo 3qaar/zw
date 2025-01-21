@@ -1,25 +1,125 @@
-function fetchProperties() {
-    fetch('http://localhost:3000/properties')
-        .then(response => response.json())
-        .then(properties => {
-            const propertyList = document.getElementById('propertyList');
-            propertyList.innerHTML = '';
+/* تنسيقات عامة */
+body {
+  font-family: "Tajawal", sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+  color: #333;
+  direction: rtl;
+}
 
-            properties.forEach(property => {
-                const propertyDiv = document.createElement('div');
-                const attachments = property.attachments.map(
-                    attachment => `<img src="http://localhost:3000/${attachment.file_path}" alt="Attachment" style="width:100%; border-radius: 5px; margin-bottom: 10px;">`
-                ).join('');
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
 
-                propertyDiv.innerHTML = `
-                    ${attachments}
-                    <h2>${property.title}</h2>
-                    <p>${property.description}</p>
-                    <p><strong>السعر:</strong> ${property.price} جنيه</p>
-                    <p><strong>الموقع:</strong> ${property.location}</p>
-                    <p><strong>نوع العقار:</strong> ${property.property_type}</p>
-                `;
-                propertyList.appendChild(propertyDiv);
-            });
-        });
+/* شريط التنقل */
+.navbar {
+  background-color: #198754;
+  padding: 1rem;
+}
+
+.navbar .navbar-brand {
+  font-size: 1.5rem;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* البطاقات */
+.card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.card img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.card .card-body {
+  padding: 1rem;
+}
+
+/* الصور المصغرة */
+.property-attachments img {
+  height: 80px;
+  width: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+}
+
+/* الأزرار */
+button {
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.btn-success {
+  background-color: #198754;
+  color: #fff;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* الإشعارات */
+.toast {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1055;
+}
+
+/* الفلاتر */
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filters input,
+.filters select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* القائمة */
+.property-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.property-list .property-card {
+  flex: 1 1 calc(33.333% - 1rem);
+  max-width: calc(33.333% - 1rem);
+}
+
+@media (max-width: 768px) {
+  .property-list .property-card {
+    flex: 1 1 calc(50% - 1rem);
+    max-width: calc(50% - 1rem);
+  }
+}
+
+@media (max-width: 576px) {
+  .property-list .property-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
 }
