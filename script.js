@@ -14,7 +14,7 @@ window.onload = () => {
 
 // جلب جميع العقارات من الخادم وعرضها
 function fetchProperties() {
-    fetch(SERVER_URL)
+    fetch(${SERVER_URL}/properties)
         .then(response => response.json())
         .then(data => {
             propertyList.innerHTML = '<h2 class="h5">العقارات المتوفرة</h2>';
@@ -25,105 +25,68 @@ function fetchProperties() {
 
 // إضافة عقار جديد
 function addProperty() {
-  const name = document.getElementById("propertyName").value;
-  const location = document.getElementById("propertyLocation").value;
-  const price = document.getElementById("propertyPrice").value;
-  const type = document.getElementById("propertyType").value;
-  const description = document.getElementById("propertyDescription").value;
+    const name = document.getElementById("propertyName").value;
+    const location = document.getElementById("propertyLocation").value;
+    const price = document.getElementById("propertyPrice").value;
+    const type = document.getElementById("propertyType").value;
+    const description = document.getElementById("propertyDescription").value;
 
-  if (!name || !location || !price || !type || !description) {
-    alert("يرجى ملء جميع الحقول!");
-    return;
-  }
+    if (!name || !location || !price || !type || !description) {
+        alert("يرجى ملء جميع الحقول!");
+        return;
+    }
 
-  const property = { name, location, price, type, description };
+    const property = { name, location, price, type, description };
 
-  fetch('http://localhost:3000/properties', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(property),
-  })
-    .then(response => response.json())
-    .then(data => {
-      console.log('تم الإرسال:', data);
-      alert(data.message);
-      displayProperties(); // تحديث العقارات بعد الإضافة
+    fetch(${SERVER_URL}/properties, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(property),
     })
-    .catch(error => console.error('حدث خطأ:', error));
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تم إضافة العقار بنجاح.');
+                fetchProperties(); // تحديث قائمة العقارات
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإضافة.');
+            }
+        })
+        .catch(error => console.error('حدث خطأ:', error));
 }
 
-function displayProperties() {
-  fetch('http://localhost:3000/properties')
-    .then(response => response.json())
-    .then(properties => {
-      const propertyList = document.getElementById("propertyList");
-      propertyList.innerHTML = "";
-
-      properties.forEach(property => {
-        const propertyCard = `
-          <div class="card mb-3 property-card">
-            <div class="row g-0">
-              <div class="col-md-4">
-                <img src="placeholder.jpg" alt="صورة العقار" class="img-fluid rounded-start">
-              </div>
-              <div class="col-md-8">
-                <div class="card-body">
-                  <h5 class="card-title">${property.name}</h5>
-                  <p class="card-text">${property.description}</p>
-                  <p class="card-text"><small class="text-muted">الموقع: ${property.location}</small></p>
-                  <p class="card-text"><small class="text-muted">السعر: ${property.price} ريال</small></p>
-                </div>
-              </div>
-            </div>
-          </div>`;
-        propertyList.innerHTML += propertyCard;
-      });
-    })
-    .catch(error => console.error('حدث خطأ أثناء تحميل العقارات:', error));
-}
-
-
-// إضافة العقار إلى واجهة العرض
+// عرض العقارات
 function addPropertyToList(property) {
     const card = document.createElement('div');
     card.className = 'card mb-3 property-card';
 
-    // عرض صورة أولى في حال كانت موجودة
     let firstImageHtml = '';
     if (property.images && property.images.length > 0) {
-        firstImageHtml = <img src="${property.images[0]}" alt="${property.name}" />;
+        firstImageHtml = <img src="${property.images[0]}" alt="${property.name}" class="img-fluid rounded-start" />;
     }
 
-    // إعداد المرفقات (جميع الصور)
     let attachmentsHtml = '';
     if (property.images && property.images.length > 0) {
         attachmentsHtml = `
             <div class="mt-3 property-attachments">
                 ${property.images.map((img, index) => `
                     <div class="attachment-item">
-                        <img src="${img}" alt="مرفق ${index + 1}">
-                        <button onclick="deleteAttachment('${property.name}', ${index})">&times;</button>
+                        <img src="${img}" alt="مرفق ${index + 1}" class="img-thumbnail">
+                        <button class="btn btn-danger btn-sm" onclick="deleteAttachment('${property.name}', ${index})">&times;</button>
                     </div>
                 `).join('')}
             </div>
         `;
     }
 
-    // أزرار التحكم (إضافة مرفق، تعديل، حذف)
     const buttonsHtml = `
-      <div class="d-flex gap-2 mt-3">
-        <button class="btn btn-outline-primary btn-sm" onclick="addAttachment('${property.name}')">
-          <i class="bi bi-paperclip"></i> إضافة مرفق
-        </button>
-        <button class="btn btn-outline-warning btn-sm" onclick="editProperty('${property.name}')">
-          <i class="bi bi-pencil-square"></i> تعديل
-        </button>
-        <button class="btn btn-outline-danger btn-sm" onclick="deleteProperty('${property.name}')">
-          <i class="bi bi-trash"></i> حذف
-        </button>
-      </div>
+        <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-outline-primary btn-sm" onclick="addAttachment('${property.name}')">إضافة مرفق</button>
+            <button class="btn btn-outline-warning btn-sm" onclick="editProperty('${property.name}')">تعديل</button>
+            <button class="btn btn-outline-danger btn-sm" onclick="deleteProperty('${property.name}')">حذف</button>
+        </div>
     `;
 
     card.innerHTML = `
@@ -169,7 +132,7 @@ function saveNewAttachment() {
     formData.append('propertyName', currentPropertyName);
     formData.append('newAttachment', newAttachment);
 
-    fetch(SERVER_URL, {
+    fetch(${SERVER_URL}/attachments, {
         method: 'POST',
         body: formData
     })
@@ -190,7 +153,9 @@ function saveNewAttachment() {
 function deleteAttachment(propertyName, index) {
     if (!confirm('هل أنت متأكد من حذف هذا المرفق؟')) return;
 
-    fetch(${SERVER_URL}?action=deleteAttachment&propertyName=${encodeURIComponent(propertyName)}&index=${index})
+    fetch(${SERVER_URL}/attachments?propertyName=${encodeURIComponent(propertyName)}&index=${index}, {
+        method: 'DELETE',
+    })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -203,11 +168,13 @@ function deleteAttachment(propertyName, index) {
         .catch(error => console.error('Error:', error));
 }
 
-// حذف العقار بالكامل
+// حذف العقار
 function deleteProperty(propertyName) {
     if (!confirm('هل أنت متأكد من حذف العقار بالكامل؟')) return;
 
-    fetch(${SERVER_URL}?action=deleteProperty&propertyName=${encodeURIComponent(propertyName)})
+    fetch(${SERVER_URL}/properties?propertyName=${encodeURIComponent(propertyName)}, {
+        method: 'DELETE',
+    })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -222,45 +189,20 @@ function deleteProperty(propertyName) {
 
 // تعديل العقار
 function editProperty(propertyName) {
-    // في تطبيق حقيقي، يمكن إظهار نافذة أو صفحة خاصة بالتعديل.
-    // هنا سنقوم فقط بجلب بيانات العقار وعرضها في الحقول ثم حذفه وإعادة إدخاله عند الضغط على "إضافة العقار".
-    fetch(${SERVER_URL}?action=getProperty&propertyName=${encodeURIComponent(propertyName)})
+    fetch(${SERVER_URL}/properties?propertyName=${encodeURIComponent(propertyName)})
         .then(response => response.json())
         .then(data => {
-            if (!data.success) {
-                alert(data.message);
-                return;
+            if (data.success) {
+                const property = data.property;
+                document.getElementById('propertyName').value = property.name;
+                document.getElementById('propertyLocation').value = property.location;
+                document.getElementById('propertyPrice').value = property.price;
+                document.getElementById('propertyDescription').value = property.description;
+                document.getElementById('propertyType').value = property.type;
+                deleteProperty(propertyName);
+            } else {
+                alert(data.message || 'حدث خطأ.');
             }
-            const property = data.property;
-            document.getElementById('propertyName').value = property.name;
-            document.getElementById('propertyLocation').value = property.location;
-            document.getElementById('propertyPrice').value = property.price;
-            document.getElementById('propertyDescription').value = property.description;
-            document.getElementById('propertyType').value = property.type;
-            // حذف العقار القديم
-            deleteProperty(propertyName);
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-// تصفية العقارات
-function filterPropertiesAdmin() {
-    const minPrice = parseFloat(document.getElementById('minPriceAdmin').value) || 0;
-    const maxPrice = parseFloat(document.getElementById('maxPriceAdmin').value) || Number.MAX_VALUE;
-    const type = document.getElementById('propertyTypeAdmin').value;
-
-    fetch(${SERVER_URL}?action=read)
-        .then(response => response.json())
-        .then(data => {
-            const filtered = data.filter(property => {
-                const price = parseFloat(property.price);
-                const matchesPrice = price >= minPrice && price <= maxPrice;
-                const matchesType = type ? (property.type === type) : true;
-                return matchesPrice && matchesType;
-            });
-
-            propertyList.innerHTML = '<h2 class="h5">العقارات المتوفرة</h2>';
-            filtered.forEach(addPropertyToList);
         })
         .catch(error => console.error('Error:', error));
 }
