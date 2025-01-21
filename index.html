@@ -18,6 +18,55 @@
 
   <!-- ربط ملف CSS الخارجي -->
   <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    body {
+      direction: rtl;
+      background-color: #f8f9fa;
+    }
+    .navbar-brand {
+      font-weight: bold;
+    }
+    .card {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .property-card img {
+      border-top-right-radius: 8px;
+      border-top-left-radius: 8px;
+      object-fit: cover;
+      height: 180px;
+      width: 100%;
+    }
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 1055;
+    }
+    .property-attachments img {
+      height: 80px;
+      width: 80px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .attachment-item {
+      position: relative;
+      display: inline-block;
+      margin: 0.3rem;
+    }
+    .attachment-item button {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      border: none;
+      background-color: #dc3545;
+      color: white;
+      border-radius: 50%;
+      padding: 0.3rem 0.5rem;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
@@ -118,10 +167,8 @@
 
   <!-- ربط مكتبة JavaScript -->
   <script>
-    // قائمة العقارات
     let properties = [];
 
-    // إضافة عقار جديد
     function addProperty() {
       const name = document.getElementById("propertyName").value;
       const location = document.getElementById("propertyLocation").value;
@@ -178,5 +225,7 @@
     }
   </script>
 
+  <!-- ربط Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
