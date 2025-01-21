@@ -25,59 +25,65 @@ function fetchProperties() {
 
 // إضافة عقار جديد
 function addProperty() {
-    const name = document.getElementById('propertyName').value.trim();
-    const location = document.getElementById('propertyLocation').value.trim();
-    const price = document.getElementById('propertyPrice').value.trim();
-    const description = document.getElementById('propertyDescription').value.trim();
-    const type = document.getElementById('propertyType').value;
-    const imageInput = document.getElementById('propertyImages');
+  const name = document.getElementById("propertyName").value;
+  const location = document.getElementById("propertyLocation").value;
+  const price = document.getElementById("propertyPrice").value;
+  const type = document.getElementById("propertyType").value;
+  const description = document.getElementById("propertyDescription").value;
 
-    if (!name || !location || !price || !description || !type) {
-        alert('يرجى تعبئة جميع الحقول.');
-        return;
-    }
+  if (!name || !location || !price || !type || !description) {
+    alert("يرجى ملء جميع الحقول!");
+    return;
+  }
 
-    if (imageInput.files.length === 0) {
-        alert('يرجى اختيار صورة واحدة على الأقل.');
-        return;
-    }
- 
-    // نستخدم FormData لإرسال البيانات والملفات للسيرفر
-    const formData = new FormData();
-    formData.append('action', 'create');
-    formData.append('name', name);
-    formData.append('location', location);
-    formData.append('price', price);
-    formData.append('description', description);
-    formData.append('type', type);
-    
-    // إضافة الملفات لـ FormData
-    for (let i = 0; i < imageInput.files.length; i++) {
-        formData.append('images[]', imageInput.files[i]);
-    }
-    
-    fetch(SERVER_URL, {
-        method: 'POST',
-        body: formData
-    })
+  const property = { name, location, price, type, description };
+
+  fetch('http://localhost:3000/properties', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(property),
+  })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            alert('تم إضافة العقار بنجاح.');
-            // إعادة تعيين الحقول
-            document.getElementById('propertyName').value = '';
-            document.getElementById('propertyLocation').value = '';
-            document.getElementById('propertyPrice').value = '';
-            document.getElementById('propertyDescription').value = '';
-            document.getElementById('propertyImages').value = '';
-            // تحديث القائمة
-            fetchProperties();
-        } else {
-            alert(data.message || 'حدث خطأ في إضافة العقار.');
-        }
+      console.log('تم الإرسال:', data);
+      alert(data.message);
+      displayProperties(); // تحديث العقارات بعد الإضافة
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => console.error('حدث خطأ:', error));
 }
+
+function displayProperties() {
+  fetch('http://localhost:3000/properties')
+    .then(response => response.json())
+    .then(properties => {
+      const propertyList = document.getElementById("propertyList");
+      propertyList.innerHTML = "";
+
+      properties.forEach(property => {
+        const propertyCard = `
+          <div class="card mb-3 property-card">
+            <div class="row g-0">
+              <div class="col-md-4">
+                <img src="placeholder.jpg" alt="صورة العقار" class="img-fluid rounded-start">
+              </div>
+              <div class="col-md-8">
+                <div class="card-body">
+                  <h5 class="card-title">${property.name}</h5>
+                  <p class="card-text">${property.description}</p>
+                  <p class="card-text"><small class="text-muted">الموقع: ${property.location}</small></p>
+                  <p class="card-text"><small class="text-muted">السعر: ${property.price} ريال</small></p>
+                </div>
+              </div>
+            </div>
+          </div>`;
+        propertyList.innerHTML += propertyCard;
+      });
+    })
+    .catch(error => console.error('حدث خطأ أثناء تحميل العقارات:', error));
+}
+
 
 // إضافة العقار إلى واجهة العرض
 function addPropertyToList(property) {
