@@ -163,8 +163,8 @@
     </div>
   </div>
 
-  <!-- ربط ملف الجافاسكربت -->
-  <script src="script.js"></script>
+  <!-- ربط مكتبة JavaScript -->
+  <script>
     // قائمة العقارات
     let properties = [];
 
@@ -182,10 +182,8 @@
         return;
       }
 
-      // إضافة عقار للقائمة
       const property = { name, location, price, type, description, images: [] };
 
-      // تخزين الصور في الكائن (أو تحميلها في وقت لاحق)
       if (images.length > 0) {
         for (let i = 0; i < images.length; i++) {
           property.images.push(URL.createObjectURL(images[i]));
@@ -194,14 +192,37 @@
 
       properties.push(property);
 
-      // إضافة العقار إلى الواجهة
       displayProperties();
 
-      // إظهار إشعار نجاح
       const toast = new bootstrap.Toast(document.getElementById("successToast"));
       toast.show();
     }
 
-    // عرض العقارات
     function displayProperties() {
-      const property
+      const propertyList = document.getElementById("propertyList");
+      propertyList.innerHTML = "";
+
+      properties.forEach((property) => {
+        const propertyCard = document.createElement("div");
+        propertyCard.className = "card mb-3 property-card";
+        propertyCard.innerHTML = `
+          <div class="row g-0">
+            <div class="col-md-4">
+              <img src="${property.images[0] || 'placeholder.jpg'}" alt="صورة العقار" class="img-fluid rounded-start">
+            </div>
+            <div class="col-md-8">
+              <div class="card-body">
+                <h5 class="card-title">${property.name}</h5>
+                <p class="card-text">${property.description}</p>
+                <p class="card-text"><small class="text-muted">الموقع: ${property.location}</small></p>
+                <p class="card-text"><small class="text-muted">السعر: ${property.price} ريال</small></p>
+              </div>
+            </div>
+          </div>
+        `;
+        propertyList.appendChild(propertyCard);
+      });
+    }
+  </script>
+</body>
+</html>
