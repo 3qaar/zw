@@ -1,5 +1,5 @@
 // رابط ملف السيرفر الذي يستقبل الطلبات
-const SERVER_URL = ''; // استبدل الرابط حسب الخادم الخاص بك
+const SERVER_URL = '185.199.110.153'; // استبدل الرابط حسب الخادم الخاص بك
 
 // عنصر يحتوي على قائمة العرض
 const propertyList = document.getElementById('propertyList');
