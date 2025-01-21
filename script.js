@@ -1,5 +1,5 @@
 // رابط ملف السيرفر الذي يستقبل الطلبات
-const SERVER_URL = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDtvj/b3G3qaJuYY4aL0Q0NVBwW6r2Yi2XmHCXtBT7cdHENwV6kOzY4dx9K+wT5ts8A+AqD/zGlQmdinEHw4xLVDTYrC9b9C0GhkUJ6MN4G1N//wCqZZiKy/yLZevnddSVqdMhcCdeYThIorZt0tXqY6YEsCbi/1YkEQWzAbI/KmdWjF2gdj2XkuEcgtKRAm/OyUeSbPzorAK0JU5hfp3bFI7qqX36xm/zis2oDjU+Nec5ZaqPsJ1MZ/7St0pBvedLU+GxB6JAvbqnrmy6r7jDh3VFWt7m1jWqd+QDN2e+PhRW02IRH7ix3xoQe4kzHJfg+d/FVU1MROUr+pBSo+3upi22PTE0Q+sYjnmGRkpGer/MWxrKjKuhep5oq4VpYEYzhaRrrVa0HBLgB7ta+MxOJoa6FafVqmreJMVFX2PZ1RzB+KBCcYiIAIDXbcDFVtZVdUutb5x4WuG2RMgPPeCEfu4vPbSN/19pDFff8lNFeSXd0lsdJ1BR0k66ekJ5DDzf5XkbfOdQDBEDXdFJVc7b4INXGd1krqaUmKs+cg3IdwPOiilUNxX+L9NWbeJ1+3yxzBK7L/XkI/qekHRwrkl970OiN1oIgky+HtC0iRjyKgxeiathyRo0Bshn2j7hffZpZllLKK4w4xe7iHZJN6YjGx5Uh+KI3rVArgU3NLF3uvw== abdalrhmaan13102007@gmail.com'; // استبدل الرابط حسب الخادم الخاص بك
+const SERVER_URL = ''; // استبدل الرابط حسب الخادم الخاص بك
 
 // عنصر يحتوي على قائمة العرض
 const propertyList = document.getElementById('propertyList');
