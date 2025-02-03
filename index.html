@@ -38,6 +38,16 @@
     #loadingSpinner {
       display: none;
     }
+    .gallery-image {
+      max-height: 70vh;
+      object-fit: contain;
+    }
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 50%;
+      padding: 15px;
+    }
   </style>
 </head>
 <body>
@@ -123,9 +133,7 @@
           </div>
         </div>
 
-        <div class="property-list" id="propertyList">
-          <!-- سيتم إدراج العناصر ديناميكيًا هنا من خلال JavaScript -->
-        </div>
+        <div class="property-list" id="propertyList"></div>
       </div>
     </div>
   </div>
@@ -136,6 +144,31 @@
       <div class="d-flex">
         <div class="toast-body">تمت الإضافة بنجاح!</div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- معرض الصور -->
+  <div id="galleryModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">معرض الصور</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div id="carouselExample" class="carousel slide">
+            <div class="carousel-inner" id="galleryImages"></div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">السابق</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">التالي</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -156,6 +189,7 @@
       const price = parseFloat(document.getElementById("propertyPrice").value);
       const type = document.getElementById("propertyType").value;
       const description = document.getElementById("propertyDescription").value;
+      const images = document.getElementById("propertyImages").files;
       
       if (!name || !location || !price || !type || !description) {
         alert("يرجى ملء جميع الحقول!");
@@ -169,16 +203,26 @@
         price: price,
         type: type,
         description: description,
-        image: "placeholder.jpg"
+        images: []
       };
 
-      const properties = JSON.parse(localStorage.getItem('properties') || '[]');
-      properties.push(newProperty);
-      localStorage.setItem('properties', JSON.stringify(properties));
+      // تحويل الصور إلى Base64
+      Promise.all(Array.from(images).map(file => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        });
+      })).then(imagesBase64 => {
+        newProperty.images = imagesBase64;
+        const properties = JSON.parse(localStorage.getItem('properties') || '[]');
+        properties.push(newProperty);
+        localStorage.setItem('properties', JSON.stringify(properties));
 
-      showToast();
-      resetForm();
-      fetchProperties();
+        showToast();
+        resetForm();
+        fetchProperties();
+      });
     }
 
     function resetForm() {
@@ -207,16 +251,33 @@
         propertyCard.innerHTML = `
           <div class="row g-0">
             <div class="col-md-4">
-              <img src="${property.image}" alt="صورة العقار" class="img-fluid rounded-start">
+              ${property.images.length ? 
+                `<img src="${property.images[0]}" class="img-fluid rounded-start" 
+                     onclick="showGallery(${property.id})" style="cursor: pointer">` : 
+                `<div class="bg-secondary h-100 d-flex align-items-center justify-content-center">
+                   <i class="bi bi-image text-light fs-1"></i>
+                 </div>`}
             </div>
             <div class="col-md-8">
               <div class="card-body">
                 <h5 class="card-title">${property.title}</h5>
                 <p class="card-text">${property.description}</p>
-                <p class="card-text"><small class="text-muted">الموقع: ${property.location}</small></p>
-                <p class="card-text"><small class="text-muted">السعر: ${property.price.toLocaleString()} ريال</small></p>
-                <p class="card-text"><small class="text-muted">النوع: ${property.type}</small></p>
-                <button class="btn btn-danger" onclick="deleteProperty(${property.id})">حذف</button>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <small class="text-muted">${property.location}</small><br>
+                    <small class="text-muted">${property.price.toLocaleString()} ريال</small><br>
+                    <small class="text-muted">${property.type}</small>
+                  </div>
+                  <div>
+                    ${property.images.length ? 
+                      `<button class="btn btn-sm btn-primary" onclick="showGallery(${property.id})">
+                         <i class="bi bi-images"></i> عرض الصور (${property.images.length})
+                       </button>` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="deleteProperty(${property.id})">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -250,6 +311,29 @@
       });
       
       displayProperties(filtered);
+    }
+
+    // عرض معرض الصور
+    function showGallery(propertyId) {
+      const property = JSON.parse(localStorage.getItem('properties'))
+        .find(p => p.id === propertyId);
+      
+      if (!property) return;
+
+      const galleryImages = document.getElementById('galleryImages');
+      galleryImages.innerHTML = '';
+      
+      property.images.forEach((img, index) => {
+        const item = document.createElement('div');
+        item.className = `carousel-item ${index === 0 ? 'active' : ''}`;
+        item.innerHTML = `
+          <img src="${img}" class="d-block w-100 gallery-image" alt="صورة العقار">
+        `;
+        galleryImages.appendChild(item);
+      });
+
+      const galleryModal = new bootstrap.Modal('#galleryModal');
+      galleryModal.show();
     }
 
     // عرض الإشعار
